@@ -1,0 +1,283 @@
+.kt-portlet__head {
+  display: flex;
+  margin-left: auto;
+  // margin-left: auto;
+  // border-bottom: 0.2px solid #6e6e6e;
+}
+
+
+.kt-portlet__head_form {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+
+.clsProgramacionAlinearBotonCrear {
+  display: flex;
+  justify-content: space-between;
+  // height: 2rem;
+  margin-bottom: 1em;
+}
+
+.clsProgramacionAlinearBotonCrear-relative {
+  position: relative;
+  margin-top: 0rem;
+}
+
+//======= TAMAÑO DE ESTADO Y COLOR : DATAGRID ======
+.clsFontSizeCheck {
+  font-size: 20px !important;
+  color: #00cc4e
+}
+
+.clsFontSizeCheckRed {
+  font-size: 20px !important;
+  color: #dc2020
+}
+
+.clsCarguiosAlignBotonAgregarItem {
+  position: relative;
+  text-align: center;
+  margin-top: 2rem;
+
+  & *>.dx-button-content {
+    background: #1976d2;
+  }
+
+  &>.dx-button {
+    background-color: #1976d2 !important;
+  }
+
+  & .clsCarguios-gris {
+    & *>.dx-button-content {
+      background: #939393;
+    }
+
+    &>.dx-button {
+      background-color: #939393 !important;
+    }
+  }
+}
+
+.clsBotonAceptar {
+  min-width: unset !important;
+  width: 2.5rem;
+
+  background: #cc292e !important;
+  border: unset !important;
+  color: #000000 !important;
+
+  & .MuiButton-icon {
+    margin-right: unset;
+    margin-left: unset;
+  }
+}
+
+.clsAlinearImportarConfig {
+  height: 38px;
+  margin-right: 15rem !important;
+}
+
+.clsVolumenCargui {
+  margin-top: 0.5rem !important;
+
+  & .clsVolumenCargui-label {
+    width: 11rem;
+
+    & .clsVolumenCargui-textBox {
+      width: 100%;
+    }
+  }
+}
+
+.clsRestaResult {
+  position: relative;
+  margin-left: 6.3rem;
+}
+
+.clsPerfilModalBotones {
+  display: flex;
+  justify-content: end;
+  margin-bottom: 1em;
+}
+
+.cls-ml-1 {
+  margin-left: 0.5rem !important;
+}
+
+.clsOpacidad {
+  opacity: 0.7;
+}
+
+.clsTituloTreeViewPermiso {
+  & *>.kt-portlet__head-title {
+    font-size: 18px;
+  }
+}
+
+.clsAlinearProfileEmail {
+  margin-left: -3rem !important;
+}
+
+.clsSeleccionSumaCarguio {
+  border: 1px solid #ff0017;
+  padding: 0px 4px 1px 5px;
+}
+
+// tabla: Tamaño de la fila alta
+.dx-datagrid .dx-row>td {
+  padding: 8px 0px 5px 12px;
+}
+
+// Margen interno extra solo para grids de Balance Ventas
+.balance-grid.dx-card .dx-datagrid .dx-row>td,
+.balance-grid.dx-card .dx-datagrid .dx-header-row>td {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+// Boton desplegable Filtro
+.clsBotonFiltroAcordeon {
+  margin-left: 3px;
+  margin-bottom: 4px;
+  background: #000000 !important;
+}
+
+.css-1wqf3nl-MuiAccordionSummary-expandIconWrapper.Mui-expanded {
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+  margin-left: 3px;
+  margin-bottom: 8px;
+}
+
+.dx-layout-manager .dx-field-item:not(.dx-first-row) {
+  padding-top: 0px;
+}
+
+// .dx-texteditor.dx-editor-filled {
+//   background: #fff;
+//   border: 1px solid #CACACA;
+//   border-radius: 12px;
+//   height: 45px;
+//   margin: 5px;
+// }
+
+// .dx-texteditor.dx-editor-filled::after {
+//   border-bottom: unset;
+// }
+
+.dx-texteditor.dx-state-active::before,
+.dx-texteditor.dx-state-focused::before {
+  border-bottom: 2px solid #ff5722;
+  transform: scale(1);
+  transition: transform .6s cubic-bezier(.4, 0, .02, 1);
+  border-bottom-width: thin;
+}
+
+.clsQuitarShadow {
+  --Paper-shadow: unset !important;
+  margin: unset !important;
+
+  & *>.clsQuitarShadow-mb10 {
+    margin-bottom: -10px;
+  }
+}
+
+// .dx-layout-manager .dx-field-item {
+//   padding-bottom: 10px;
+//   font-size: 14px;
+//   display: flex
+// }
+
+// .dx-field-item-label-location-top {
+//   display: block;
+//   padding: 16px 0 3px;
+//   -webkit-padding-start: 16px;
+//   padding-inline-start: 16px;
+//   -webkit-padding-end: 16px;
+//   padding-inline-end: 16px;
+//   width: 130px;
+// }
+
+#panel2-content>.MuiAccordionDetails-root {
+  padding: 0px 0px 0px;
+}
+
+// .dx-row-focused {
+//   border: solid 1.6px #ffb8b8;
+// }
+
+.clsDataGridProgramacion {
+
+  & *>.dx-datagrid-rowsview .dx-row-focused.dx-data-row .dx-command-edit .dx-link,
+  .dx-datagrid-rowsview .dx-row-focused.dx-data-row>td:not(.dx-focused):not(.dx-cell-modified):not(.dx-datagrid-invalid) {
+    background-color: #bbbbbb !important;
+    color: rgba(0, 0, 0, .87);
+  }
+}
+
+.clsMr-3 {
+  margin-right: 3rem;
+}
+
+.clsAlignImagenProduct>div {
+  padding-left: 2rem;
+  vertical-align: top;
+  line-height: 20px;
+  font-size: 15px;
+  float: left;
+}
+
+.clsAlignUploadImagen {
+
+  & .clsBotonAceptar {
+    margin-bottom: 7rem;
+    margin-left: 2rem;
+  }
+}
+
+.css-vpdblu-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked {
+  color: #fff !important;
+}
+
+.css-vpdblu-MuiButtonBase-root-MuiSwitch-switchBase.Mui-checked+.MuiSwitch-track {
+  background-color: #000 !important;
+}
+
+.clsAlinearFichaTecnica {
+  display: flex;
+  justify-content: space-between;
+}
+
+
+.clsAjustarLateralesDetallePedidos {
+  padding: 0px 20px 0px 20px !important;
+}
+
+.clsBotonCategoriaSubAgregar{
+  & *> .dx-button-content {
+    background: #1976d2;
+    & i{
+      color: #fff !important;
+    }
+  }
+}
+
+.clsLlegaHoyManana {
+  font-size: 11px !important;
+}
+
+.clsMr-1 {
+  margin-right: 1rem !important;
+}
+
+// Contenedor de contenido de páginas (reemplaza ContentBox styled)
+.content-box {
+  margin: 2rem;
+  @media (max-width: 600px) {
+    margin: 1rem;
+  }
+}

@@ -1,0 +1,8 @@
+allowBuilds:
+  '@dynamicss/dynamicss': true
+  '@parcel/watcher': true
+  browser-tabs-lock: true
+  core-js: true
+  esbuild: true
+  inferno: true
+  protobufjs: true

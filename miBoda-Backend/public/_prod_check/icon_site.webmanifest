@@ -1,0 +1,15 @@
+{
+  "name": "Royal Sensory Experience Massage",
+  "short_name": "Royal Masajes",
+  "icons": [
+    {
+      "src": "/temp02/img/inicio/logo-header.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#004A99",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

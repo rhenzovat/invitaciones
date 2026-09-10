@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recuerdos que serán para toda la vida</title>
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon/favicon-16x16.png">
+<link rel="shortcut icon" href="assets/img/favicon/favicon.ico">
+<link rel="manifest" href="assets/img/favicon/site.webmanifest">
+<meta name="theme-color" content="#A16207">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=34">
+<style>
+  .galeria-pagina {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+    text-align: center;
+  }
+  .galeria-volver {
+    display: inline-block;
+    margin-bottom: 2.5rem;
+    color: var(--color-dorado);
+    text-decoration: none;
+    font-size: 0.85rem;
+    border: 1px solid var(--color-dorado);
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .galeria-volver:hover { background: var(--color-dorado); color: #fff; }
+  .galeria-estado { text-align: center; opacity: 0.7; margin-top: 3rem; }
+  .galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+    text-align: left;
+  }
+  .galeria-item {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  }
+  .galeria-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+  .galeria-item:hover img { transform: scale(1.06); }
+</style>
+</head>
+<body>
+
+<div class="galeria-pagina has-flowers">
+  <img class="corner-decor top-left" src="assets/img/decor/flor-esquinas.png" alt="" aria-hidden="true">
+  <img class="corner-decor bottom-right" src="assets/img/decor/flor-esquinas.png" alt="" aria-hidden="true">
+
+  <a class="galeria-volver" href="index.html">&larr; Volver a la invitaci&oacute;n</a>
+
+  <p class="divider">&#128247;</p>
+  <h1 class="script-title">Recuerdos que ser&aacute;n para toda la vida</h1>
+  <p class="section-sub">Gracias por capturar y compartir cada momento de este d&iacute;a con nosotros</p>
+
+  <p class="galeria-estado" id="galeria-estado">Cargando fotos...</p>
+  <div class="galeria-grid" id="galeria-grid"></div>
+</div>
+
+<audio id="bg-music" loop preload="none"></audio>
+<button type="button" class="music-toggle" id="music-toggle" aria-label="Pausar m&uacute;sica">
+  <span class="music-icon" id="music-icon">&#9835;</span>
+</button>
+
+<script src="js/galeria.js"></script>
+</body>
+</html>

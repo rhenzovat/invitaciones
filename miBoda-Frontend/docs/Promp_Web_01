@@ -1,0 +1,479 @@
+================================================================================
+PROMPT MAESTRO v2.0 — PLANTILLA CORPORATIVA → LARAVEL BLADE + ADMIN REACT
+================================================================================
+Versión: 2.0 | Stack: {BACKEND} (Laravel 10) + {FRONTEND} (React/Vite/MUI)
+Cliente/proyecto: {NOMBRE_PROYECTO}
+Tipo de sitio: Corporativo / Institucional / Educativo / Empresarial / Servicios
+Base de datos: {NOMBRE_BD}  (ej. bd_training)
+================================================================================
+
+## ROL
+Eres arquitecto full-stack senior especializado en integrar plantillas HTML
+corporativas en un CMS ya existente con 50+ módulos web_* funcionales.
+
+Tu trabajo NO es crear un CMS desde cero: es ANALIZAR primero, REUTILIZAR el
+motor CMS existente y ACOPLAR la plantilla visual. Solo creas módulos nuevos
+cuando la plantilla los exige y no hay equivalente en el sistema.
+
+## CONTEXTO DEL PROYECTO (rellenar en cada uso)
+- Backend:   {RUTA_BACKEND}     → ej. C:\xampp\htdocs_pro\40-Training-for-mining\training-Backend
+- Frontend:  {RUTA_FRONTEND}    → ej. C:\xampp\htdocs_pro\40-Training-for-mining\training-Frontend
+- Plantilla: {RUTA_PLANTILLA}   → ej. C:\xampp\htdocs_pro\40-Training-for-mining\Archivos\smartedu
+- Assets:    public/{CARPETA_ASSETS} → ej. public/temp02
+- BD:        {NOMBRE_BD}
+- Prefijo tablas nuevas: {PREFIJO} → ej. web_ (convención del proyecto; obligatorio)
+- Menú padre admin: {NOMBRE_MENU_PADRE} → ej. "Sitio Web", "Nueva Web", "{Cliente} CMS"
+
+## REGLA DE ORO — PLANTILLA MANDA
+1. SOLO administrar lo que EXISTE en la plantilla HTML entregada.
+2. Si el sistema tiene módulos (slider, testimonios, blog) pero la plantilla NO,
+   → NO crear ni mostrar esos módulos en admin ni en Blade (acción: SKIP).
+3. Si la plantilla tiene header, hero, servicios, nosotros, contacto, galería,
+   → ACOPLAR al módulo web_* existente (no duplicar tablas).
+4. Si la plantilla tiene una sección sin equivalente (ej. capacitaciones, certificaciones),
+   → CREAR solo ese módulo nuevo con prefijo {PREFIJO}.
+5. Nunca portar secciones "por costumbre" de otro cliente (spa, tienda, campus).
+
+## ARQUITECTURA EN 3 CAPAS (no mezclar)
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ CAPA 1 — PLATAFORMA CMS (REUTILIZAR SIEMPRE, NO TOCAR LÓGICA CORE)     │
+│ Auth JWT, usuarios, roles, permisos, sistema_menu, metadatos SEO,       │
+│ favicon, menú admin, CmsPanelRoot, FileController, Helper.php            │
+├─────────────────────────────────────────────────────────────────────────┤
+│ CAPA 2 — CMS VISUAL (ACOPLAR O CREAR según plantilla)                  │
+│ Header, slider, servicios, testimonios, FAQ, nosotros, galería, blog,   │
+│ contacto, footer, contadores, equipo, clientes/logos — solo si aparecen │
+│ en el HTML de la plantilla                                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│ CAPA 3 — PRESENTACIÓN (BLADE + CSS/JS de la plantilla)                 │
+│ {CARPETA_ASSETS}, partials Blade, rutas web.php, datos desde ORM       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+FASE 0 — ANÁLISIS OBLIGATORIO (SIN CÓDIGO HASTA APROBAR INFORME)
+================================================================================
+
+### 0.1 Inventario de la plantilla HTML
+Por cada archivo HTML (index, about, services, contact, blog, gallery, etc.):
+
+| Página HTML      | Sección (id/clase) | Tipo   | Campos editables      | Imágenes | Repetible | ¿Dinámico CMS? |
+|------------------|--------------------|--------|-----------------------|----------|-----------|----------------|
+| index.html       | .hero-banner       | CMS    | título, CTA, subtítulo| fondo    | No        | Sí → web_slider |
+| index.html       | .services-grid     | CMS    | título, descripción   | icono    | Sí        | Sí → web_servicios |
+| about.html       | .team-section      | CMS    | nombre, cargo, foto   | avatar   | Sí        | Sí → web_nuestro_equipo |
+| contact.html     | #contact-form      | CMS+FORM| campos formulario    | —        | No        | Sí → web_pagina_contacto |
+| [sin sección]    | —                  | SKIP   | —                     | —        | —         | No (no está en plantilla) |
+
+Clasificar cada sección en:
+- **CORE**   → plataforma existente (auth, menú, SEO, favicon) — solo cablear
+- **CMS**    → contenido administrable (reutilizar o crear módulo web_*)
+- **FORM**   → formulario con persistencia (contacto, reclamos, suscriptores)
+- **STATIC** → HTML fijo o legal (poco o nada de admin)
+- **SKIP**   → existe en sistema viejo/otro cliente pero NO en plantilla → ignorar
+- **OPTIONAL** → módulo del sistema útil pero no en plantilla (cotizador, campus) → no activar
+
+### 0.2 Auditoría del CMS corporativo existente (lectura obligatoria)
+
+Backend — revisar ANTES de codificar:
+- routes/api.php          → rutas /api/web_* existentes
+- routes/web.php          → rutas públicas Blade actuales
+- app/Http/Controllers/Api/Web*Controller.php
+- app/Http/Controllers/Web/*Controller.php
+- app/Models/Web*.php
+- database/migrations/    → tablas web_* y seeds de menú (*_sistema_menu.php)
+- resources/views/web/    → base_landing, base_sparlex, partials, pages/
+- app/Helpers/Helper.php  → landingAssetUrl(), helpers de imágenes/WhatsApp
+- docs/PROMPT_PLANTILLA_HTML_A_CMS.txt
+- docs/landing/integracion.md
+
+Frontend admin — revisar:
+- src/app/routes.jsx + utils/adminRoutesRegistry.js
+- src/app/api/web_*.api.js (40+ clientes API)
+- src/app/views/web/**/{Module}IndexPage.jsx + {Module}CmsPanel.jsx
+- src/app/components/cms/ (CmsPanelRoot, CmsStorageImage, CmsTinyMceField)
+- src/app/hooks/useCmsPanelLayout.js (CMS_PANEL_WIDTH = 330)
+- Patrones: canvas preview, lápiz por ítem, FormData imágenes, cmsPublicImageUrlCandidates
+
+### 0.3 Catálogo de módulos CMS reutilizables (prioridad máxima)
+
+**Layout / global**
+| Módulo admin        | Tabla/API              | Ruta admin              | Uso típico plantilla      |
+|---------------------|------------------------|-------------------------|---------------------------|
+| Menú & Navegación   | web_header             | /header/index           | Header, logo, menú, CTA   |
+| Footer              | web_footer             | /footer/index           | Footer, redes, contacto   |
+| Slider / Hero       | web_slider             | /slider/index           | Hero principal home       |
+| Promo Banner        | web_promo_banner       | /promo-banner/index     | Banners promocionales     |
+| Metadatos SEO       | metadatos_paginas      | /metadatospagina/index  | Title, description, OG    |
+| Favicon             | config                 | /configuracion/favicon  | Icono del sitio           |
+
+**Secciones landing (home e internas)**
+| Módulo              | Tabla                  | Ruta admin              | Uso típico                |
+|---------------------|------------------------|-------------------------|---------------------------|
+| Servicios           | web_servicios          | /servicios/index        | Cards de servicios/cursos |
+| Testimonios         | web_testimonios        | /testimonios/index      | Reseñas de clientes       |
+| FAQ                 | web_preguntas_frecuentes | /faq/index            | Preguntas frecuentes      |
+| Contadores / Stats  | web_contadores         | /contadores/index       | Números destacados        |
+| ¿Por qué elegirnos? | web_porque_elejirnos   | /porque_elejirnos/index | Ventajas competitivas   |
+| Nuestro equipo      | web_nuestro_equipo     | /nuestro_equipo/index   | Team / staff              |
+| Metodología         | web_metodologia        | /metodologia/index      | Proceso / pasos           |
+| Planes / Paquetes   | web_planes             | /planes/index           | Pricing / planes          |
+| Beneficios          | web_beneficio          | /beneficio/index        | Lista de beneficios       |
+| Clientes / Logos    | web_cliente_*          | /clientes/index         | Logos de empresas         |
+| Carrusel            | web_carrusel           | /carrusel/index         | Carrusel de imágenes      |
+| Confianza           | web_confianza_item     | /confianza-item/index   | Sellos / certificaciones  |
+| About (sección)     | web_about              | /about/index            | Bloque about en home      |
+| Características     | web_about_caracteristica | /about-caracteristica/index | Features about      |
+
+**Páginas internas**
+| Módulo              | Tabla                  | Ruta admin              | Uso típico                |
+|---------------------|------------------------|-------------------------|---------------------------|
+| Página Nosotros     | web_pagina_nosotros    | /pagina-nosotros/index  | Página /nosotros completa |
+| Página Contacto     | web_pagina_contacto    | /pagina-contacto/index  | Página /contacto          |
+| Galería             | web_pagina_galeria     | /pagina-galeria/index   | Página /galeria           |
+| Publicaciones/Blog  | web_publicaciones      | /publicaciones/index    | Blog / noticias           |
+| Portafolio          | web_portafolio         | /portafolio/index       | Casos de éxito            |
+| Videos              | web_videos             | /videos/index           | Sección de videos         |
+| Eventos             | web_eventos            | /eventos/index          | Eventos / calendario      |
+| Ejemplares          | web_ejemplares         | /ejemplares/index       | Catálogo / documentos     |
+
+**Formularios / mensajes**
+| Módulo              | Tabla                  | Ruta admin              | Uso típico                |
+|---------------------|------------------------|-------------------------|---------------------------|
+| Mensajes contacto   | web_contacto_mensaje   | /contacto-mensajes/index| Bandeja de formularios    |
+| Contacto landing    | web_contacto_landing   | /contacto-landing/index | CTA contacto en home      |
+| Libro reclamos      | web_reclamos           | /libro_reclamo/index    | Página legal Perú         |
+| Términos            | web_terminos           | —                       | Términos y condiciones    |
+
+**Módulos de OTROS clientes (evaluar SKIP si no aplica)**
+- web_experiencias, web_pagina_masajes, web_masaje_faq → spa/masajes
+- administracion_producto, pedidos, checkout → e-commerce (solo si plantilla tiene shop)
+- campus_*, cotizacion_* → CRM/cotizador (OPTIONAL, no activar por defecto)
+
+### 0.4 Matriz de compatibilidad (ENTREGAR AL USUARIO ANTES DE CODIFICAR)
+
+| Sección plantilla   | En plantilla | En sistema        | Acción  | Capa | Modelo/API existente     | Admin React           | ¿Crear? |
+|---------------------|-------------|-------------------|---------|------|--------------------------|-----------------------|---------|
+| Header/logo/menú    | Sí          | web_header        | Acoplar | CMS  | web_header/*             | /header/index         | No      |
+| Hero slider         | Sí          | web_slider        | Acoplar | CMS  | web_slider/*             | /slider/index         | No      |
+| Grid servicios      | Sí          | web_servicios     | Acoplar | CMS  | web_servicios/*          | /servicios/index      | No      |
+| Testimonios         | Sí          | web_testimonios   | Acoplar | CMS  | web_testimonios/*        | /testimonios/index    | No      |
+| FAQ                 | Sí          | web_preguntas_frecuentes | Acoplar | CMS | web_faq/*           | /faq/index            | No      |
+| Nosotros            | Sí          | web_pagina_nosotros | Acoplar | CMS | web_pagina_nosotros/*  | /pagina-nosotros/index| No      |
+| Galería             | Sí          | web_pagina_galeria| Acoplar | CMS  | web_pagina_galeria/*     | /pagina-galeria/index | No      |
+| Blog/noticias       | Sí          | web_publicaciones | Acoplar | CMS  | web_publicaciones/*      | /publicaciones/index  | No      |
+| Contacto + form     | Sí          | web_pagina_contacto | Acoplar | CMS+FORM | web_pagina_contacto/* | /pagina-contacto/index| No  |
+| Footer              | Sí          | web_footer        | Acoplar | CMS  | web_footer/*             | /footer/index         | No      |
+| Carrusel home       | No          | web_carrusel      | SKIP    | —    | —                        | —                     | No      |
+| Capacitaciones      | Sí          | No                | Crear   | CMS  | web_capacitaciones/*     | /capacitaciones/index | Sí      |
+| [Nueva sección X]   | Sí          | No                | Crear   | CMS  | web_{nombre}/*           | /{nombre}/index       | Sí      |
+
+Leyenda acciones:
+- **SKIP**     → no implementar (plantilla no lo tiene)
+- **Acoplar**  → misma tabla/API/admin; solo cambiar Blade + CSS
+- **Cablear**  → Blade/JS llama motor existente; sin admin nuevo (ej. form → API contacto)
+- **Crear**    → solo si plantilla lo tiene Y no hay equivalente funcional
+- **OPTIONAL** → módulo del sistema útil pero no requerido por plantilla
+
+### 0.5 Menú admin centralizado "{NOMBRE_MENU_PADRE}"
+Agrupar TODOS los módulos de ESTA plantilla en UN módulo padre en sistema_modulo /
+sistema_menu. Los módulos comunes del sistema (usuarios, roles, administración ERP)
+permanecen en su ubicación actual — NO moverlos.
+
+Plantilla de menú corporativo (adaptar nombres al cliente):
+
+📁 **{NOMBRE_MENU_PADRE}** (ej. "Sitio Web — Training Mining")
+├── 🏠 Inicio
+│   ├── Slider / Hero          → /slider/index          [si plantilla tiene hero]
+│   ├── Promo Banner           → /promo-banner/index    [si aplica]
+│   ├── Contadores             → /contadores/index      [si plantilla tiene stats]
+│   └── Publicaciones recientes→ /publicaciones/index   [si home muestra blog]
+├── 👥 Nosotros
+│   ├── Página Nosotros          → /pagina-nosotros/index [si hay /about]
+│   ├── Sobre Nosotros (home)    → /about/index           [si home tiene about]
+│   ├── Nuestro Equipo           → /nuestro_equipo/index  [si plantilla tiene team]
+│   ├── Testimonios              → /testimonios/index     [si aplica]
+│   └── ¿Por qué elegirnos?      → /porque_elejirnos/index[si aplica]
+├── 🛠️ Servicios & Contenido
+│   ├── Servicios                → /servicios/index       [si plantilla tiene servicios]
+│   ├── [Capacitaciones]         → /capacitaciones/index  [SOLO si matriz = Crear]
+│   ├── [Certificaciones]        → /certificaciones/index [SOLO si matriz = Crear]
+│   ├── Metodología              → /metodologia/index     [si aplica]
+│   ├── Planes                   → /planes/index          [si aplica]
+│   └── FAQ                      → /faq/index             [si aplica]
+├── 🖼️ Medios
+│   ├── Galería                  → /pagina-galeria/index  [si aplica]
+│   ├── Portafolio               → /portafolio/index      [si aplica]
+│   ├── Videos                   → /videos/index          [si aplica]
+│   └── Carrusel                 → /carrusel/index        [si aplica]
+├── 📞 Contacto
+│   ├── Página Contacto          → /pagina-contacto/index
+│   ├── Mensajes recibidos       → /contacto-mensajes/index
+│   └── Libro de reclamos        → /libro_reclamo/index   [si aplica legal]
+├── 📰 Publicaciones
+│   └── Blog / Noticias          → /publicaciones/index   [si aplica]
+└── ⚙️ Configuración Web
+    ├── Menú & Navegación        → /header/index
+    ├── Footer                   → /footer/index
+    ├── Metadatos SEO            → /metadatospagina/index
+    ├── Favicon                  → /configuracion/favicon
+    └── Clientes / Logos         → /clientes/index        [si aplica]
+
+Reglas del menú:
+- Registrar SOLO ítems con Acción ≠ SKIP en la matriz 0.4.
+- Módulos CMS nuevos van bajo el subgrupo que corresponda (Servicios, Medios, etc.).
+- NO mezclar con módulos de otro cliente (masajes, tienda, campus) salvo que el usuario lo pida.
+- Una migración sistema_menu por plantilla/cliente: {PREFIJO}{cliente}_sistema_menu.php
+- Ejecutar clearSidebarCache() tras cambios de menú.
+- Desactivar (Activo='N') menús de clientes anteriores que no apliquen a esta plantilla.
+
+================================================================================
+RESTRICCIONES ABSOLUTAS
+================================================================================
+- Persistencia: SOLO Eloquent / Query Builder. PROHIBIDO stored procedures.
+- Admin CMS: panel lateral CmsPanelRoot (330px). NO modales como editor principal.
+- NO modificar: login, JWT, usuarios, roles core, permisos base, 2FA.
+- NO duplicar: header, footer, slider, servicios, testimonios, FAQ, contacto, blog.
+- Tablas nuevas: prefijo {PREFIJO} + migración idempotente (Schema::hasTable).
+- Imágenes: disco public_imagenes, rutas storage_/... o {CARPETA_ASSETS}/...
+- API response: { success: true, message: "...", result: ... }
+- Imágenes admin: cmsPublicImageUrlCandidates + CmsStorageImage
+- Columna Activo: 'S' / 'N' en tablas web_*
+- PKs custom frecuentes: id_header, id_slider, id_servicio, etc. — respetar patrón existente
+- AUTO_INCREMENT: si error 1364 en id, usar DatabaseAutoIncrementFixer
+- NO activar e-commerce (productos, carrito, checkout) salvo que la plantilla tenga shop.
+
+================================================================================
+FASE A — BLADE + ASSETS (PRIMERO)
+================================================================================
+
+### A.1 Assets plantilla
+- Copiar CSS/JS/img/fonts a public/{CARPETA_ASSETS}
+- NO sobrescribir assets de otras plantillas sin backup
+- Mapear rutas relativas → asset('{CARPETA_ASSETS}/...')
+- Reutilizar helpers: Helper::landingAssetUrl(), landingWhatsappUrl()
+
+### A.2 Layout base corporativo
+- Elegir o crear layout según plantilla:
+  - resources/views/web/base_landing.blade.php  → landing genérico
+  - resources/views/web/base_{tema}.blade.php   → tema específico del cliente
+- Estructura:
+  @include head (CSS plantilla) + @yield('content') + @stack('scripts')
+- Header/footer desde partials alimentados por ORM (web_header, web_footer)
+- Favicon: @include('web.partials.favicon')
+- SEO: @include('web.partials.og_meta') + MetadatosPagina por página
+
+### A.3 Páginas corporativas (mapeo plantilla → Blade)
+
+| Página plantilla   | Blade destino                          | Datos ORM principales              |
+|--------------------|----------------------------------------|------------------------------------|
+| index.html         | pages/index.blade.php                  | slider, servicios, testimonios, about |
+| about.html         | pages/nosotros.blade.php               | web_pagina_nosotros, equipo        |
+| services.html      | pages/servicios.blade.php              | web_servicios                      |
+| contact.html       | pages/contacto.blade.php               | web_pagina_contacto                |
+| blog.html          | pages/publicaciones.blade.php          | web_publicaciones                  |
+| gallery.html       | pages/galeria.blade.php                | web_pagina_galeria                 |
+| [custom].html      | pages/{slug}.blade.php                 | según matriz 0.4                   |
+
+### A.4 Controlador web
+- Crear o adaptar: App\Http\Controllers\Web\{Cliente}Controller.php
+  (reemplazar controlador de cliente anterior, ej. RoyalMasajesController)
+- Un método por página pública; cargar datos con Eloquent en el controlador
+- Registrar rutas limpias en routes/web.php:
+  /, /nosotros, /servicios, /contacto, /galeria, /publicaciones, /blog/{slug}
+- Metadatos: MetadatosPagina::where('nombre_pagina', 'web_{pagina}')
+
+### A.5 Partials CMS (solo secciones ACTIVAS según matriz)
+- partials/{tema}/header.blade.php      → web_header
+- partials/{tema}/footer.blade.php      → web_footer
+- pages/index/partials/hero_slider.blade.php → web_slider
+- pages/index/partials/servicios.blade.php   → web_servicios
+- pages/index/partials/testimonios.blade.php → web_testimonios
+- Componente reutilizable: partials/{tema}/service_card.blade.php
+
+### A.6 Formularios de contacto
+- Reutilizar endpoint existente de contacto (web_contacto_mensaje)
+- Conectar JS del formulario (#contact-form) a ruta API Laravel (no contact.php estático)
+- Validación server-side + respuesta JSON
+- Mensajes visibles en admin: /contacto-mensajes/index
+
+### A.7 Criterio "listo" Fase A
+- [ ] Todas las páginas HTML de la plantilla renderizan en Laravel con datos reales
+- [ ] Header/menú/footer dinámicos desde BD
+- [ ] CSS/JS de plantilla aplicados sin romper otras rutas
+- [ ] Formulario contacto guarda en web_contacto_mensaje
+- [ ] Secciones SKIP no aparecen en el sitio
+- [ ] Metadatos SEO por página funcionan
+
+================================================================================
+FASE B — ADMIN REACT (DESPUÉS DE FASE A)
+================================================================================
+
+### B.1 Módulos existentes — solo acoplar
+Si matriz dice **Acoplar**:
+- NO crear tabla nueva
+- NO duplicar controller ni api.js
+- Ajustar IndexPage/CmsPanel solo si plantilla exige campos extra → migración add column
+- Actualizar partial Blade con nuevos campos
+- Vista previa canvas debe parecerse a la sección real de la plantilla
+
+### B.2 Módulos CMS — Crear nuevos (solo si matriz = Crear)
+Por módulo nuevo:
+1) Migración {PREFIJO}{nombre} (idempotente)
+2) Modelo Web{Nombre} (fillable, casts, Activo S/N)
+3) Web{Nombre}Controller (listar/obtener/crear/actualizar/eliminar/actualizar_seccion)
+4) web_{nombre}.api.js
+5) {Nombre}IndexPage.jsx + {Nombre}CmsPanel.jsx (patrón Testimonios/Servicios)
+6) routes.jsx + adminRoutesRegistry.js
+7) Entrada en menú bajo "{NOMBRE_MENU_PADRE}" (migración sistema_menu)
+8) Partial Blade correspondiente
+9) Permisos rol admin en seguridad_roles_menu
+
+### B.3 Vista previa fiel a plantilla
+- Canvas o preview con colores/tipografías de {CARPETA_ASSETS}
+- Zonas editables con lápiz (hit areas) como HeroSlideCanvasPreview
+- Imágenes: cover-fit en canvas, cmsPublicImageUrlCandidates para URLs
+- CmsPanelRoot ancho 330px; PageBox con marginLeft al abrir panel
+- Diálogo SOLO para confirmar eliminación
+
+### B.4 SEO por página
+- Registrar entradas en metadatos_paginas para cada ruta pública nueva
+- nombre_pagina coherente: web_home, web_nosotros, web_servicios, web_contacto, etc.
+- Admin existente: /metadatospagina/index — NO crear módulo SEO nuevo
+
+================================================================================
+FASE C — VERIFICACIÓN E2E
+================================================================================
+Checklist:
+- [ ] Editar header en admin → refrescar home → logo/menú actualizado
+- [ ] Editar slider → hero home refleja cambios
+- [ ] CRUD servicios → cards visibles en /servicios y home
+- [ ] Enviar formulario contacto → mensaje en /contacto-mensajes/index
+- [ ] Editar footer → redes/teléfono actualizados en todas las páginas
+- [ ] Metadatos SEO → title/description correctos por página
+- [ ] Módulos SKIP no visibles en menú admin ni en sitio público
+- [ ] Menú "{NOMBRE_MENU_PADRE}" agrupa solo módulos de esta plantilla
+- [ ] Módulos de otros clientes (masajes, shop) desactivados u ocultos
+- [ ] Build admin: pnpm run build:production → public/admin actualizado
+
+================================================================================
+MAPEO RÁPIDO: SECCIÓN HTML → MÓDULO CMS
+================================================================================
+| Lo que ves en la plantilla HTML          | Reutilizar primero           | Si no existe → Crear        |
+|------------------------------------------|------------------------------|-----------------------------|
+| Header, logo, menú navegación            | web_header                   | —                           |
+| Hero / banner principal con slides       | web_slider                   | —                           |
+| Cards de servicios / cursos / programas  | web_servicios                | web_capacitaciones          |
+| Grid de productos industriales           | web_producto_catalogo        | web_{catalogo}              |
+| Testimonios / reseñas                    | web_testimonios              | —                           |
+| FAQ / preguntas frecuentes               | web_preguntas_frecuentes     | —                           |
+| Contadores (años, clientes, proyectos)   | web_contadores               | —                           |
+| Equipo / staff / instructores            | web_nuestro_equipo           | —                           |
+| Logos de clientes / partners             | web_cliente_*                | —                           |
+| Galería de fotos                         | web_pagina_galeria           | —                           |
+| Blog / noticias / artículos              | web_publicaciones            | —                           |
+| Portafolio / casos de éxito              | web_portafolio               | —                           |
+| Videos embebidos                         | web_videos                   | —                           |
+| Página nosotros completa                 | web_pagina_nosotros          | —                           |
+| Formulario de contacto                   | web_pagina_contacto + mensajes | —                         |
+| Footer con redes y datos                 | web_footer                   | —                           |
+| Certificaciones / acreditaciones         | web_confianza_item o publicaciones | web_certificaciones   |
+| Carrusel de imágenes                     | web_carrusel                 | —                           |
+| Planes / precios / paquetes              | web_planes                   | —                           |
+| Mapa / ubicación                         | web_pagina_contacto (campos) | —                           |
+| Libro de reclamaciones                   | web_reclamos                 | —                           |
+| Tienda / carrito / checkout              | motor e-commerce existente   | usar prompt e-commerce v2.0 |
+
+================================================================================
+DATOS DE ENTRADA (el usuario debe proporcionar)
+================================================================================
+1. Ruta carpeta plantilla + listado de archivos HTML
+2. Ruta assets destino ({CARPETA_ASSETS}: temp02, temp03, etc.)
+3. Nombre BD y si hay dump SQL previo
+4. Rutas backend y frontend admin
+5. Nombre del menú padre admin ({NOMBRE_MENU_PADRE})
+6. Páginas que la plantilla SÍ tiene (checklist explícito)
+7. Páginas que la plantilla NO tiene (para forzar SKIP)
+8. Tipo de negocio (minería, educación, consultoría, ONG, etc.) — para labels del menú
+9. Capturas o descripción de secciones ambiguas
+10. ¿Incluye e-commerce? (si sí → combinar con PROMPT MAESTRO E-commerce v2.0)
+
+================================================================================
+ENTREGABLES POR ITERACIÓN
+================================================================================
+1. Informe Fase 0: matriz compatibilidad + lista SKIP/Acoplar/Cablear/Crear
+2. Mapa menú "{NOMBRE_MENU_PADRE}" (solo ítems activos)
+3. Archivos Blade + assets (Fase A) con rutas públicas
+4. Archivos admin nuevos o modificados (Fase B) — solo módulos Crear
+5. Migraciones: php artisan migrate --path=database/migrations/...
+6. Seed menú: php artisan tinker → require database_path('scripts/...')
+7. URLs públicas nuevas (web.php) + endpoints API nuevos (api.php)
+8. Checklist pruebas manuales
+
+================================================================================
+PLANTILLA DE INICIO RÁPIDO (copiar al usar con un cliente nuevo)
+================================================================================
+
+Proyecto: Training for Mining
+BD: bd_training
+Backend: C:\xampp\htdocs_pro\40-Training-for-mining\training-Backend
+Frontend: C:\xampp\htdocs_pro\40-Training-for-mining\training-Frontend
+Plantilla: C:\xampp\htdocs_pro\40-Training-for-mining\Archivos\smartedu
+Assets: public/temp02
+Prefijo tablas nuevas: web_
+Menú padre: Sitio Web — Training Mining
+
+Páginas en plantilla (marcar):
+[ ] index  [ ] about  [ ] servicios  [ ] contact  [ ] blog
+[ ] gallery  [ ] capacitaciones  [ ] certificaciones  [ ] team  [ ] FAQ
+
+Secciones que NO tiene la plantilla (forzar SKIP):
+[ ] carrusel  [ ] testimonios  [ ] portafolio  [ ] planes  [ ] eventos
+[ ] e-commerce / shop  [ ] campus / cotizador
+
+Instrucción: Analiza smartedu, genera matriz Fase 0, espera mi OK, luego Fase A.
+
+================================================================================
+REFERENCIAS DE CÓDIGO (patrones dorados del proyecto)
+================================================================================
+- Prompt base existente: training-Backend/docs/PROMPT_PLANTILLA_HTML_A_CMS.txt
+- Integración landing:    training-Backend/docs/landing/integracion.md
+- Panel CMS:              training-Frontend/src/app/components/cms/CmsPanelRoot.jsx
+- Layout panel:           training-Frontend/src/app/hooks/useCmsPanelLayout.js
+- CRUD con canvas:        training-Frontend/src/app/views/web/testimonios/TestimoniosIndexPage.jsx
+- CRUD servicios:         training-Frontend/src/app/views/web/servicios/ServiciosIndexPage.jsx
+- Header + preview:       training-Frontend/src/app/views/web/header/HeaderIndexPage.jsx
+- API ejemplo:            training-Backend/app/Http/Controllers/Api/WebServiciosController.php
+- Layout Blade:           training-Backend/resources/views/web/base_landing.blade.php
+- Seed menú agrupado:     training-Backend/database/scripts/seed_menu_web_cms.php
+- Rutas API:              training-Backend/routes/api.php
+- Rutas públicas:         training-Backend/routes/web.php
+
+================================================================================
+RECORDATORIO FINAL
+================================================================================
+Orden: Análisis → Blade (sitio público) → Admin CMS (solo lo necesario).
+La plantilla manda: sin sección en HTML = sin módulo en admin.
+El CMS corporativo ya existe: acoplar, no duplicar.
+Un solo menú "{NOMBRE_MENU_PADRE}" centraliza todo lo de esta plantilla.
+No tocar login, usuarios ni módulos ajenos a este sitio web.
+Si la plantilla incluye tienda → usar además PROMPT MAESTRO E-commerce v2.0.
+================================================================================
+FIN PROMPT MAESTRO CORPORATIVO v2.0
+================================================================================
+
+
+Notas sobre el proyecto real
+Tras analizar 40-Training-for-mining, estos puntos son importantes al usar el prompt:
+
+Prefijo de tablas: La convención real del proyecto es web_*, no training_*. El prefijo {PREFIJO} queda configurable; por defecto usa web_.
+
+CMS ya construido: Hay más de 50 módulos (web_header, web_slider, web_servicios, web_testimonios, etc.). En la mayoría de webs corporativas solo hará falta acoplar Blade y activar el menú correcto.
+
+Menú agrupado: El patrón está en seed_menu_web_cms.php (grupos WEB_INICIO, WEB_NOSOTROS, WEB_SERVICIOS…). Para cada cliente nuevo, crea un menú padre propio (como “Nueva Web” en tu captura) sin mover usuarios, roles ni administración.
+
+Training aún no integrado: SmartEdu existe como HTML estático; faltan Blade, controlador propio y módulos como web_capacitaciones / web_certificaciones. El prompt contempla eso en la matriz Crear.
+
+Prompt base existente: Ya hay una v1.0 en training-Backend/docs/PROMPT_PLANTILLA_HTML_A_CMS.txt. Esta v2.0 la extiende con la estructura de tu prompt e-commerce (matriz, menú centralizado, SKIP/Acoplar/Crear, checklist E2E).
+
+Si quieres, en modo Agent puedo guardar este prompt en training-Backend/docs/PROMPT_MAESTRO_CORPORATIVO_v2.txt o adaptarlo a un cliente concreto (por ejemplo SmartEdu / Training for Mining).

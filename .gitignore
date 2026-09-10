@@ -1,0 +1,6 @@
+# Herramientas descargadas localmente (no son parte del código del proyecto)
+/tools/
+.claude/scheduled_tasks.lock
+
+# Respaldos de base de datos (pueden contener datos de clientes/otros proyectos)
+/db_backups/

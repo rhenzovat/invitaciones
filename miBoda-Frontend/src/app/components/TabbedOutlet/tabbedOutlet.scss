@@ -1,0 +1,78 @@
+.tabbed-outlet-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.tabbed-outlet-tabs {
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 4px 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .ant-tabs {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  .tabbed-outlet-toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 6px;
+    border-left: 1px solid rgba(0, 0, 0, 0.08);
+    padding-left: 8px;
+  }
+
+  .ant-tabs-nav {
+    margin-bottom: 0;
+  }
+
+  .ant-tabs-tab {
+    max-width: 200px;
+
+    .ant-tabs-tab-btn {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .tabbed-outlet-tab-label {
+    display: inline-block;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+  }
+}
+
+.tabbed-outlet-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  position: relative;
+}
+
+.tabbed-outlet-pane {
+  display: none;
+  height: 100%;
+  min-height: 100%;
+
+  &.is-active {
+    display: block;
+  }
+}
+
+.theme-dark .tabbed-outlet-tabs {
+  background: #1e1e2e;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}

@@ -1,0 +1,123 @@
+================================================================================
+CORRECCIONES: MÚLTIPLES PERFILES, ERROR E1059 Y CONSULTAS DE LOGIN
+================================================================================
+Fecha: 2026
+Proyecto: PRESTOMART (prestomart-Front + prestomart-Back)
+
+--------------------------------------------------------------------------------
+1. ERROR E1059 - "The following column names are not unique: buttons"
+--------------------------------------------------------------------------------
+CAUSA:
+  En RolesListPage.jsx el DataGrid de DevExtreme tenía dos columnas con
+  type="buttons" sin nombre único. DevExtreme asigna por defecto el nombre
+  "buttons" a ambas, lo que provoca el error E1059.
+
+SOLUCIÓN APLICADA:
+  Archivo: src/app/views/roles/RolesListPage.jsx
+  - Se añadió name="asignarMenu" a la primera columna de botones (Asignar Permisos).
+  - Se añadió name="operaciones" a la segunda columna de botones (Editar/Eliminar).
+
+  Así cada columna tiene un identificador único y el grid funciona correctamente.
+
+
+--------------------------------------------------------------------------------
+2. MÚLTIPLES PERFILES NO SE MOSTRABAN EN LOGIN (ej. Richard id_usuario 51)
+--------------------------------------------------------------------------------
+CAUSA:
+  - En la tabla seguridad_perfil_users el usuario tiene varias filas (ej. id_perfil 2 y 16).
+  - En AuthController::getPerfilData() se usaba INNER JOIN con seguridad_roles_perfil.
+  - Si un perfil no tenía ningún rol asignado en seguridad_roles_perfil, esa fila
+    no aparecía en el resultado, por lo que el backend devolvía solo un perfil
+    y user.count === 1, y el frontend redirigía al dashboard sin mostrar el
+    formulario "Seleccionar Perfil".
+
+SOLUCIÓN APLICADA (Backend - AuthController.php):
+  - Se cambió INNER JOIN por LEFT JOIN en:
+    * seguridad_roles_perfil SRP
+    * seguridad_roles_menu SRM
+    * sistema_menu_objetos SMO
+  - Así se devuelve una fila por cada (usuario, perfil, rol), incluyendo perfiles
+    sin rol (id_roles null, menu_objetos vacío).
+  - Se evita agrupar id_menu null para no generar partes vacías en menu_objetos.
+
+  Con esto, la respuesta de login incluye perfil[] con todos los perfiles del
+  usuario (ej. 2 para Richard). Si user.count > 1, el frontend muestra el
+  formulario "Seleccionar Perfil" y llama a listarPerfiles().
+
+
+--------------------------------------------------------------------------------
+3. LISTA DE PERFILES PARA EL SELECTOR (obtener_lista / listarPerfiles)
+--------------------------------------------------------------------------------
+CAUSA:
+  El endpoint perfiles/obtener_lista usa el SP USP_SEGURIDAD_PERFIL_OBTENER_LISTA.
+  Si el SP no existía o devolvía solo un perfil, el desplegable "Seleccionar Perfil"
+  no mostraba todos los perfiles del usuario.
+
+SOLUCIÓN APLICADA:
+  Se creó el script SQL:
+    prestomart-Back/database/scripts/USP_SEGURIDAD_PERFIL_OBTENER_LISTA.sql
+
+  El SP devuelve todas las filas de seguridad_perfil_users para el usuario
+  unidas a seguridad_perfil, con columnas: id_perfil, nombre.
+
+  ACCIÓN REQUERIDA:
+  Ejecutar en la base de datos (bd_prestomart) el contenido del archivo:
+    database/scripts/USP_SEGURIDAD_PERFIL_OBTENER_LISTA.sql
+
+  Así, al llamar a obtener_perfiles({ id_usuario: user.id }) desde el login,
+  se obtienen todos los perfiles para rellenar el combo "Seleccionar Perfil".
+
+
+--------------------------------------------------------------------------------
+4. SP DE LOGIN (USP_ADMINISTRACION_PERFIL_LISTAR_LOGIN) - OPCIONAL
+--------------------------------------------------------------------------------
+Se generó un SP equivalente a la lógica de getPerfilData para poder centralizar
+la consulta en base de datos si se desea.
+
+  Archivo: prestomart-Back/database/scripts/USP_ADMINISTRACION_PERFIL_LISTAR_LOGIN.sql
+
+  Parámetros:
+    - p_id_usuario INT (obligatorio)
+    - p_id_perfil INT (opcional, NULL = todos los perfiles)
+    - p_id_roles INT (opcional, NULL = todos los roles)
+
+  Devuelve: id_usuario, nombre_usuario, email, nombre_perfil, id_perfil, id_roles,
+            menu_objetos (formato |id_menu_id_objeto1,objeto2,...|-...).
+
+  Usa LEFT JOIN con seguridad_roles_perfil para incluir todos los perfiles del
+  usuario. No depende de datatreeview; usa sistema_menu_objetos.
+
+  Para usar el SP desde AuthController en lugar de la consulta PHP, se puede
+  llamar a:
+    DB::select('CALL USP_ADMINISTRACION_PERFIL_LISTAR_LOGIN(?, ?, ?)',
+               [$userId, $idPerfil, $idRoles]);
+  y mapear el resultado al formato esperado por el front (menu_objetos ya viene
+  construido en el SP).
+
+
+--------------------------------------------------------------------------------
+5. FLUJO DE MÚLTIPLES PERFILES EN EL FRONTEND
+--------------------------------------------------------------------------------
+1) Usuario envía email/contraseña -> login() en JWTAuthContext.
+2) Backend responde con: user (incluye count = número de perfiles), perfil (array).
+3) Si user.count > 1:
+   - Se llama a listarPerfiles() -> obtener_perfiles({ id_usuario: user.id }).
+   - obtener_perfiles llama a GET perfiles/obtener_lista -> USP_SEGURIDAD_PERFIL_OBTENER_LISTA.
+   - Se muestra formToShow === "profile" (formulario "Seleccionar Perfil").
+   - El usuario elige perfil (y luego rol) y al seleccionar rol se llama
+     validar_perfil(id_perfil, id_rol) y se navega al dashboard.
+4) Si user.count === 1:
+   - Se navega directamente a /dashboard/default.
+
+
+--------------------------------------------------------------------------------
+6. RESUMEN DE ARCHIVOS MODIFICADOS / CREADOS
+--------------------------------------------------------------------------------
+- src/app/views/roles/RolesListPage.jsx .......... Columnas con name="asignarMenu" y name="operaciones".
+- prestomart-Back/app/Http/Controllers/Api/AuthController.php
+  .. getPerfilData(): LEFT JOIN para SRP, SRM, SMO; agrupar solo si id_menu no es null.
+- prestomart-Back/database/scripts/USP_SEGURIDAD_PERFIL_OBTENER_LISTA.sql ..... (nuevo) SP lista perfiles usuario.
+- prestomart-Back/database/scripts/USP_ADMINISTRACION_PERFIL_LISTAR_LOGIN.sql .. (nuevo) SP login (opcional).
+- CORRECCIONES_MULTIPLES_PERFILES_Y_ROLES.txt .... (este archivo) Documentación.
+
+================================================================================
