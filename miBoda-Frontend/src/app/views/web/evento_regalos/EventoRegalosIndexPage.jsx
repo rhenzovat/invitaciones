@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Typography, TextField, FormControlLabel, Switch } from "@mui/material";
-import useInjectPublicCss from "../evento/useInjectPublicCss";
+import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { TransferenciasEditor, YapePlinEditor, darkTf } from "../evento/EventoEditors";
+import { TransferenciasEditor, YapePlinEditor, darkTf, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/caja-de-regalo.png";
 
 export default function EventoRegalosIndexPage() {
   useInjectPublicCss();
@@ -19,6 +21,7 @@ export default function EventoRegalosIndexPage() {
       regalos_tienda_nombre: data.regalos_tienda_nombre,
       regalos_tienda_url: data.regalos_tienda_url,
       regalos_direccion_fisica: data.regalos_direccion_fisica,
+      icono_regalos: data.icono_regalos,
     });
     setPanel("config");
   };
@@ -37,7 +40,7 @@ export default function EventoRegalosIndexPage() {
 
       <CanvasPhone>
         <div className="section has-flowers" style={{ padding: "20px 0" }}>
-          <p className="divider">🎁</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_regalos || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Mesa de Regalos</h2>
           <div className="regalos-grid">
             {data.regalos_sobre_activo ? (
@@ -85,6 +88,7 @@ export default function EventoRegalosIndexPage() {
 
       {panel === "config" && (
         <EditPanel open title="Editar configuración de regalos" onClose={() => setPanel(null)} onSave={guardarConfig} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_regalos} onChange={(path) => setForm((p) => ({ ...p, icono_regalos: path }))} />
           <FormControlLabel
             sx={{ color: "#f1f5f9", mb: 1 }}
             control={<Switch checked={!!form.regalos_sobre_activo} onChange={(e) => setForm((p) => ({ ...p, regalos_sobre_activo: e.target.checked }))} />}

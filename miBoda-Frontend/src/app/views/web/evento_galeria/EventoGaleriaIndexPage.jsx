@@ -3,7 +3,9 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf } from "../evento/EventoEditors";
+import { darkTf, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/camara-reflex-digital.png";
 
 export default function EventoGaleriaIndexPage() {
   useInjectPublicCss();
@@ -17,6 +19,7 @@ export default function EventoGaleriaIndexPage() {
       galeria_nota: data.galeria_nota,
       galeria_boton_subir: data.galeria_boton_subir,
       galeria_boton_ver: data.galeria_boton_ver,
+      icono_galeria: data.icono_galeria,
     });
     setOpen(true);
   };
@@ -32,11 +35,11 @@ export default function EventoGaleriaIndexPage() {
       <CanvasPhone>
         <EditZone className="section has-flowers">
           <EzPencil onClick={abrir} />
-          <p className="divider">📷</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_galeria || ICONO_DEFAULT)} alt="" /></p>
           <div className="galeria-title-row">
             <h2 className="script-title">Galería de Fotos</h2>
             <span className="btn-icon-camera btn-icon-camera-float">
-              <img src={publicAsset("assets/img/decor/icon-invitacion/camara-reflex-digital.png")} alt="" />
+              <img src={publicAsset(data.icono_galeria || ICONO_DEFAULT)} alt="" />
             </span>
           </div>
           <p className="section-sub">{data.galeria_texto}</p>
@@ -50,6 +53,7 @@ export default function EventoGaleriaIndexPage() {
 
       {open && (
         <EditPanel open title="Editar galería" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_galeria} onChange={(path) => set("icono_galeria", path)} />
           <TextField {...darkTf} label="Texto (subtítulo)" multiline minRows={2} value={form.galeria_texto || ""} onChange={(e) => set("galeria_texto", e.target.value)} />
           <TextField {...darkTf} label="Botón: Subir foto" value={form.galeria_boton_subir || ""} onChange={(e) => set("galeria_boton_subir", e.target.value)} />
           <TextField {...darkTf} label="Botón: Ver galería" value={form.galeria_boton_ver || ""} onChange={(e) => set("galeria_boton_ver", e.target.value)} />

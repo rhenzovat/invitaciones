@@ -3,17 +3,20 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { UbicacionesEditor } from "../evento/EventoEditors";
+import { UbicacionesEditor, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/mapa.png";
 
 export default function EventoUbicacionesIndexPage() {
   useInjectPublicCss();
   const { data, loading, saving, guardarCampos } = useEventoData();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
+  const [icono, setIcono] = useState("");
 
-  const abrir = () => { setItems(data.ubicaciones || []); setOpen(true); };
+  const abrir = () => { setItems(data.ubicaciones || []); setIcono(data.icono_ubicaciones || ""); setOpen(true); };
   const guardar = async () => {
-    const ok = await guardarCampos({ ubicaciones: items });
+    const ok = await guardarCampos({ ubicaciones: items, icono_ubicaciones: icono });
     if (ok) setOpen(false);
   };
 
@@ -26,7 +29,7 @@ export default function EventoUbicacionesIndexPage() {
       <CanvasPhone>
         <EditZone className="section has-flowers" sx={{ py: 3 }}>
           <EzPencil onClick={abrir} />
-          <p className="divider">📍</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_ubicaciones || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">¿Dónde Será?</h2>
           <div className="cards-grid">
             {(data.ubicaciones || []).map((u, i) => (
@@ -47,6 +50,7 @@ export default function EventoUbicacionesIndexPage() {
 
       {open && (
         <EditPanel open title="Editar ubicaciones" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
           <UbicacionesEditor items={items} onChange={setItems} />
         </EditPanel>
       )}

@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Typography, TextField } from "@mui/material";
-import useInjectPublicCss from "../evento/useInjectPublicCss";
+import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf } from "../evento/EventoEditors";
+import { darkTf, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/calendario.png";
 
 export default function EventoCountdownIndexPage() {
   useInjectPublicCss();
@@ -17,6 +19,7 @@ export default function EventoCountdownIndexPage() {
       fecha_boda_texto: data.fecha_boda_texto,
       countdown_nota_1: data.countdown_nota_1,
       countdown_nota_2: data.countdown_nota_2,
+      icono_countdown: data.icono_countdown,
     });
     setOpen(true);
   };
@@ -36,6 +39,7 @@ export default function EventoCountdownIndexPage() {
       <CanvasPhone>
         <EditZone className="section section-dark countdown-section" sx={{ py: 4 }}>
           <EzPencil onClick={abrir} />
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_countdown || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Faltan</h2>
           <div className="mini-calendario" style={{ maxWidth: 220, margin: "0 auto" }}>
             <p className="mini-calendario-mes" style={{ textTransform: "uppercase" }}>{mes}</p>
@@ -59,6 +63,7 @@ export default function EventoCountdownIndexPage() {
 
       {open && (
         <EditPanel open title="Editar cuenta regresiva" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_countdown} onChange={(path) => set("icono_countdown", path)} />
           <TextField {...darkTf} type="datetime-local" label="Fecha y hora de la boda" InputLabelProps={{ shrink: true }}
             value={form.fecha_boda ? form.fecha_boda.replace(" ", "T").slice(0, 16) : ""} onChange={(e) => set("fecha_boda", e.target.value)} />
           <TextField {...darkTf} label="Fecha en texto" value={form.fecha_boda_texto || ""} onChange={(e) => set("fecha_boda_texto", e.target.value)} />

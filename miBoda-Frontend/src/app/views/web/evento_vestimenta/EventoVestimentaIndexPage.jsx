@@ -3,7 +3,9 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { ColoresEditor, darkTf, ImageUploadField } from "../evento/EventoEditors";
+import { ColoresEditor, darkTf, ImageUploadField, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/camisa.png";
 
 export default function EventoVestimentaIndexPage() {
   useInjectPublicCss();
@@ -12,7 +14,7 @@ export default function EventoVestimentaIndexPage() {
   const [form, setForm] = useState({});
   const [colores, setColores] = useState([]);
 
-  const abrirTexto = () => { setForm({ vestimenta_tipo: data.vestimenta_tipo, vestimenta_restriccion: data.vestimenta_restriccion }); setPanel("texto"); };
+  const abrirTexto = () => { setForm({ vestimenta_tipo: data.vestimenta_tipo, vestimenta_restriccion: data.vestimenta_restriccion, icono_vestimenta: data.icono_vestimenta }); setPanel("texto"); };
   const abrirColores = () => { setColores(data.vestimenta_colores || []); setPanel("colores"); };
   const abrirImagenes = () => { setForm({ vestimenta_img_novia: data.vestimenta_img_novia, vestimenta_img_novio: data.vestimenta_img_novio }); setPanel("imagenes"); };
 
@@ -29,7 +31,7 @@ export default function EventoVestimentaIndexPage() {
       <CanvasPhone>
         <EditZone className="section has-flowers" sx={{ py: 3 }}>
           <EzPencil onClick={abrirTexto} />
-          <p className="divider">👔</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_vestimenta || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Código de Vestimenta</h2>
           <p className="vestimenta-label">Vestimenta</p>
           <p className="vestimenta-tipo">{data.vestimenta_tipo}</p>
@@ -53,6 +55,7 @@ export default function EventoVestimentaIndexPage() {
 
       {panel === "texto" && (
         <EditPanel open title="Editar vestimenta" onClose={() => setPanel(null)} onSave={guardarTexto} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_vestimenta} onChange={(path) => setForm((p) => ({ ...p, icono_vestimenta: path }))} />
           <TextField {...darkTf} label="Tipo (ej: Formal)" value={form.vestimenta_tipo || ""} onChange={(e) => setForm((p) => ({ ...p, vestimenta_tipo: e.target.value }))} />
           <TextField {...darkTf} label="Restricción" value={form.vestimenta_restriccion || ""} onChange={(e) => setForm((p) => ({ ...p, vestimenta_restriccion: e.target.value }))} />
         </EditPanel>

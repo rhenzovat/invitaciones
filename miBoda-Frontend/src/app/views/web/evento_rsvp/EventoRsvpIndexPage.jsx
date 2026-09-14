@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Typography, TextField } from "@mui/material";
-import useInjectPublicCss from "../evento/useInjectPublicCss";
+import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf } from "../evento/EventoEditors";
+import { darkTf, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/papiro.png";
 
 export default function EventoRsvpIndexPage() {
   useInjectPublicCss();
@@ -17,6 +19,7 @@ export default function EventoRsvpIndexPage() {
       rsvp_contacto_nombre: data.rsvp_contacto_nombre,
       rsvp_contacto_whatsapp: data.rsvp_contacto_whatsapp,
       capacidad_maxima: data.capacidad_maxima,
+      icono_rsvp: data.icono_rsvp,
     });
     setOpen(true);
   };
@@ -31,7 +34,7 @@ export default function EventoRsvpIndexPage() {
       <CanvasPhone>
         <EditZone className="section section-terracota has-flowers" sx={{ py: 3 }}>
           <EzPencil onClick={abrir} />
-          <p className="divider">💎</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_rsvp || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Confirma tu Asistencia</h2>
           <p className="rsvp-limite">Por favor, confirma tu asistencia antes del <strong>{data.rsvp_fecha_limite}</strong></p>
           <button type="button" className="btn-primary">Confirmar Asistencia</button>
@@ -43,6 +46,7 @@ export default function EventoRsvpIndexPage() {
 
       {open && (
         <EditPanel open title="Editar RSVP" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_rsvp} onChange={(path) => setForm((p) => ({ ...p, icono_rsvp: path }))} />
           <TextField {...darkTf} label="Fecha límite (texto)" value={form.rsvp_fecha_limite || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_fecha_limite: e.target.value }))} />
           <TextField {...darkTf} label="Nombre de contacto" value={form.rsvp_contacto_nombre || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_contacto_nombre: e.target.value }))} />
           <TextField {...darkTf} label="WhatsApp (solo números, con código de país)" value={form.rsvp_contacto_whatsapp || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_contacto_whatsapp: e.target.value }))} />

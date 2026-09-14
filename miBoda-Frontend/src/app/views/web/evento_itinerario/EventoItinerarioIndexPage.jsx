@@ -3,17 +3,20 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { ItinerarioEditor } from "../evento/EventoEditors";
+import { ItinerarioEditor, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/fecha-limite.png";
 
 export default function EventoItinerarioIndexPage() {
   useInjectPublicCss();
   const { data, loading, saving, guardarCampos } = useEventoData();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
+  const [icono, setIcono] = useState("");
 
-  const abrir = () => { setItems(data.itinerario || []); setOpen(true); };
+  const abrir = () => { setItems(data.itinerario || []); setIcono(data.icono_itinerario || ""); setOpen(true); };
   const guardar = async () => {
-    const ok = await guardarCampos({ itinerario: items });
+    const ok = await guardarCampos({ itinerario: items, icono_itinerario: icono });
     if (ok) setOpen(false);
   };
 
@@ -26,7 +29,7 @@ export default function EventoItinerarioIndexPage() {
       <CanvasPhone>
         <EditZone className="section" sx={{ py: 3 }}>
           <EzPencil onClick={abrir} />
-          <p className="divider">🕐</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_itinerario || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Itinerario</h2>
           <div className="itinerario-card">
             <div className="itinerario-timeline">
@@ -46,6 +49,7 @@ export default function EventoItinerarioIndexPage() {
 
       {open && (
         <EditPanel open title="Editar itinerario" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
           <ItinerarioEditor items={items} onChange={setItems} />
         </EditPanel>
       )}

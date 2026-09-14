@@ -5,6 +5,8 @@
 
 @php
     $a = fn (string $p) => asset('temp02/'.$p);
+    // Ícono de sección editable desde el admin; si el cliente no lo cambió, usa el default.
+    $ico = fn (?string $p, string $def) => \App\Support\MiBodaPageData::assetUrl($p) ?: $a($def);
 @endphp
 
 @section('head_page')
@@ -83,7 +85,7 @@
   <section class="section section-dark countdown-section fade-in" id="countdown-section">
     <div class="countdown-overlay"></div>
     <div class="countdown-content">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/calendario.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_countdown, 'assets/img/decor/icon-invitacion/calendario.png') }}" alt=""></p>
     <h2 class="script-title">Faltan</h2>
     <div class="mini-calendario" id="mini-calendario"></div>
     <div class="countdown" id="countdown">
@@ -104,7 +106,7 @@
   <section class="section has-flowers fade-in" id="ubicaciones" style="padding-bottom: 10px;">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor top-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/mapa.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_ubicaciones, 'assets/img/decor/icon-invitacion/mapa.png') }}" alt=""></p>
     <h2 class="script-title">¿Dónde Será?</h2>
     <div class="cards-grid" id="ubicaciones-list"></div>
     <p class="closing-phrase">¡Esperamos verte ahí!</p>
@@ -131,7 +133,7 @@
   <section class="section fade-in" id="itinerario">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-itinerario-esquina-superior.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor top-right" src="{{ $a('assets/img/decor/flor-itinerario-esquina-superior.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/fecha-limite.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_itinerario, 'assets/img/decor/icon-invitacion/fecha-limite.png') }}" alt=""></p>
     <h2 class="script-title">Itinerario</h2>
     <p class="divider">&#9670;</p>
     <div class="itinerario-card">
@@ -146,7 +148,7 @@
   <section class="section has-flowers fade-in" id="vestimenta">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor bottom-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/camisa.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_vestimenta, 'assets/img/decor/icon-invitacion/camisa.png') }}" alt=""></p>
     <h2 class="script-title">Código de Vestimenta</h2>
     <div class="vestimenta-illustration">
       <img src="{{ \App\Support\MiBodaPageData::assetUrl($evento->vestimenta_img_novia) }}" alt="Vestido de la novia" class="vestimenta-img">
@@ -179,7 +181,7 @@
 
   <!-- CONFIRMAR ASISTENCIA -->
   <section class="section section-terracota has-flowers fade-in" id="rsvp">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/papiro.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_rsvp, 'assets/img/decor/icon-invitacion/papiro.png') }}" alt=""></p>
     <h2 class="script-title">Confirma tu Asistencia</h2>
     <p class="rsvp-limite">Por favor, confirma tu asistencia antes del <strong id="rsvp-fecha-limite"></strong></p>
     <button type="button" class="btn-primary" id="rsvp-btn">Confirmar Asistencia</button>
@@ -193,7 +195,7 @@
   <section class="section has-flowers fade-in" id="regalos" style="padding-bottom: 40px;">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor top-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/caja-de-regalo.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_regalos, 'assets/img/decor/icon-invitacion/caja-de-regalo.png') }}" alt=""></p>
     <h2 class="script-title">Mesa de Regalos</h2>
     <p class="section-sub">Nuestro mayor regalo es tu presencia, pero si deseas tener un detalle con nosotros, les dejamos estas opciones:</p>
     <div class="regalos-grid" id="regalos-grid"></div>
@@ -223,7 +225,7 @@
   <section class="section has-flowers fade-in" id="video">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor bottom-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/silla-de-director.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_video, 'assets/img/decor/icon-invitacion/silla-de-director.png') }}" alt=""></p>
     <h2 class="script-title">Nuestro Video</h2>
     <p class="section-sub">{{ $evento->video_texto }}</p>
     <div class="video-frame">
@@ -236,11 +238,11 @@
 
   <!-- GALERÍA -->
   <section class="section has-flowers fade-in" id="galeria">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/camara-reflex-digital.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_galeria, 'assets/img/decor/icon-invitacion/camara-reflex-digital.png') }}" alt=""></p>
     <div class="galeria-title-row">
       <h2 class="script-title">Galería de Fotos</h2>
       <button type="button" class="btn-icon-camera btn-icon-camera-float" id="galeria-camera" aria-label="Tomar foto">
-        <img src="{{ $a('assets/img/decor/icon-invitacion/camara-reflex-digital.png') }}" alt="">
+        <img src="{{ $ico($evento->icono_galeria, 'assets/img/decor/icon-invitacion/camara-reflex-digital.png') }}" alt="">
       </button>
     </div>
     <p class="section-sub">{{ $evento->galeria_texto }}</p>
@@ -256,7 +258,7 @@
   <section class="section has-flowers fade-in" id="cancion">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor top-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/guitarra.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_cancion, 'assets/img/decor/icon-invitacion/guitarra.png') }}" alt=""></p>
     <h2 class="script-title">Sugiere una Canción</h2>
     <p class="section-sub">{{ $evento->cancion_texto }}</p>
     <form id="cancion-form" class="cancion-form">
@@ -289,7 +291,7 @@
   <section class="section has-flowers fade-in" id="historia">
     <img class="corner-decor top-left" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
     <img class="corner-decor bottom-right" src="{{ $a('assets/img/decor/flor-esquinas.png') }}" alt="" aria-hidden="true">
-    <p class="divider"><img class="divider-icon" src="{{ $a('assets/img/decor/icon-invitacion/amor.png') }}" alt=""></p>
+    <p class="divider"><img class="divider-icon" src="{{ $ico($evento->icono_historia, 'assets/img/decor/icon-invitacion/amor.png') }}" alt=""></p>
     <h2 class="script-title">Nuestra Historia</h2>
     <p class="section-sub">Los momentos más especiales que nos trajeron hasta aquí</p>
     <div class="historia-timeline" id="historia-list"></div>

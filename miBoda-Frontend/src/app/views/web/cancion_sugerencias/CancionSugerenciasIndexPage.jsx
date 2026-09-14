@@ -7,10 +7,12 @@ import InboxIcon from "@mui/icons-material/Inbox";
 
 import { listar, eliminar } from "../../../api/web_cancion_sugerencias.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
-import useInjectPublicCss from "../evento/useInjectPublicCss";
+import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, GenerosEditor } from "../evento/EventoEditors";
+import { darkTf, GenerosEditor, IconPickerField } from "../evento/EventoEditors";
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/guitarra.png";
 
 const PageWrap = styled(Box)(() => ({
   padding: "24px",
@@ -126,6 +128,7 @@ export default function CancionSugerenciasIndexPage() {
       cancion_label_genero: data?.cancion_label_genero,
       cancion_label_de: data?.cancion_label_de,
       cancion_boton: data?.cancion_boton,
+      icono_cancion: data?.icono_cancion,
     });
     setGeneros(data?.cancion_generos || []);
     setOpen(true);
@@ -139,7 +142,7 @@ export default function CancionSugerenciasIndexPage() {
         <CanvasPhone sx={{ mb: 3 }}>
           <EditZone className="section has-flowers">
             <EzPencil onClick={abrirTexto} tip="Editar texto" />
-            <p className="divider">🎵</p>
+            <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_cancion || ICONO_DEFAULT)} alt="" /></p>
             <h2 className="script-title">Sugiere una Canción</h2>
             <p className="section-sub">{data.cancion_texto}</p>
           </EditZone>
@@ -148,6 +151,7 @@ export default function CancionSugerenciasIndexPage() {
 
       {open && (
         <EditPanel open title="Editar 'Sugiere una Canción'" onClose={() => setOpen(false)} onSave={guardarTexto} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={form.icono_cancion} onChange={(path) => set("icono_cancion", path)} />
           <TextField {...darkTf} label="Texto (subtítulo)" multiline minRows={2} value={form.cancion_texto || ""} onChange={(e) => set("cancion_texto", e.target.value)} />
 
           <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)", fontWeight: 700, textTransform: "uppercase", mt: 2, mb: 1 }}>

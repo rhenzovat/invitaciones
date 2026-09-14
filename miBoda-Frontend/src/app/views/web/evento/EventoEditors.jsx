@@ -83,6 +83,106 @@ export function ImageUploadField({ label, value, onChange }) {
   );
 }
 
+// ─── SELECCIONAR ÍCONO (galería propia + subir + pegar link) ─────────────────
+const ICONOS_PRESET_PATH = "assets/img/decor/icon-invitacion/";
+const ICONOS_PRESET = [
+  "amor.png", "calendario.png", "camisa.png", "caja-de-regalo.png",
+  "camara-reflex-digital.png", "fecha-limite.png", "guitarra.png", "mapa.png",
+  "papiro.png", "silla-de-director.png",
+];
+
+export function IconPickerField({ label, value, onChange }) {
+  const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState("");
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await subirImagen(file);
+      onChange(res.path);
+    } catch (err) {
+      handleErrorMessages("Error", err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const usarUrl = () => {
+    const v = urlInput.trim();
+    if (!v) return;
+    onChange(v);
+    setUrlInput("");
+  };
+
+  return (
+    <Box sx={{ mb: 1.6 }}>
+      {label && <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)", mb: 0.6 }}>{label}</Typography>}
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, mb: 1 }}>
+        <Box sx={{
+          width: 56, height: 56, borderRadius: "8px", overflow: "hidden", flexShrink: 0,
+          border: "1px solid rgba(255,255,255,0.15)", bgcolor: "rgba(255,255,255,0.04)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          {value ? <img src={publicAsset(value)} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+        </Box>
+        <Button
+          component="label" size="small" variant="outlined" disabled={uploading}
+          startIcon={uploading ? <CircularProgress size={14} /> : <UploadIcon sx={{ fontSize: 16 }} />}
+          sx={{ textTransform: "none", color: "#f5c6d8", borderColor: "rgba(204,107,142,0.4)", fontSize: "0.72rem" }}
+        >
+          {uploading ? "Subiendo..." : "Subir mi imagen"}
+          <input type="file" accept="image/*" hidden onChange={handleFile} />
+        </Button>
+      </Box>
+
+      <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.45)", mb: 0.6 }}>O elige un ícono:</Typography>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8, mb: 1.2 }}>
+        {ICONOS_PRESET.map((file) => {
+          const path = ICONOS_PRESET_PATH + file;
+          const selected = value === path;
+          return (
+            <Box
+              key={file}
+              onClick={() => onChange(path)}
+              title={file.replace(".png", "")}
+              sx={{
+                width: 38, height: 38, borderRadius: "8px", cursor: "pointer", p: "6px",
+                border: selected ? "2px solid #f5c6d8" : "1px solid rgba(255,255,255,0.15)",
+                bgcolor: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center",
+                "&:hover": { borderColor: "rgba(204,107,142,0.6)" },
+              }}
+            >
+              <img src={publicAsset(path)} alt="" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            </Box>
+          );
+        })}
+      </Box>
+
+      <Box sx={{ display: "flex", gap: 0.8, alignItems: "flex-start" }}>
+        <TextField
+          {...darkTf}
+          sx={{ ...darkTf.sx, mb: 0 }}
+          placeholder="O pega aquí el link de una imagen de ícono"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); usarUrl(); } }}
+        />
+        <Button size="small" onClick={usarUrl} sx={{ textTransform: "none", fontSize: "0.68rem", color: "#f5c6d8", flexShrink: 0, mt: 0.3 }}>Usar</Button>
+      </Box>
+      <Button
+        size="small" component="a" href="https://www.flaticon.com/search?word=boda" target="_blank" rel="noopener noreferrer"
+        sx={{ textTransform: "none", fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", mt: 0.3, p: 0, minWidth: 0, "&:hover": { background: "none", color: "#f5c6d8" } }}
+      >
+        Buscar más íconos →
+      </Button>
+    </Box>
+  );
+}
+
 // ─── FAMILIA ─────────────────────────────────────────────────────────────────
 export function FamiliaEditor({ items, onChange }) {
   const update = (i, field, value) => {
@@ -179,7 +279,7 @@ export function ItinerarioEditor({ items, onChange }) {
           <Grid container spacing={1}>
             <Grid item xs={6}><TextField {...darkTf} label="Hora" value={it.hora || ""} onChange={(e) => update(i, "hora", e.target.value)} /></Grid>
             <Grid item xs={6}><TextField {...darkTf} label="Título" value={it.titulo || ""} onChange={(e) => update(i, "titulo", e.target.value)} /></Grid>
-            <Grid item xs={12}><ImageUploadField label="Ícono/imagen" value={it.imagen} onChange={(path) => update(i, "imagen", path)} /></Grid>
+            <Grid item xs={12}><IconPickerField label="Ícono/imagen" value={it.imagen} onChange={(path) => update(i, "imagen", path)} /></Grid>
           </Grid>
         </ItemCard>
       ))}
@@ -205,7 +305,7 @@ export function HistoriaEditor({ items, onChange }) {
           <RemoveBtn size="small" onClick={() => remove(i)}><DeleteIcon sx={{ fontSize: 14 }} /></RemoveBtn>
           <Grid container spacing={1}>
             <Grid item xs={12}>
-              <ImageUploadField label="Ícono (sube un PNG/SVG, ej. de Flaticon)" value={h.icono} onChange={(path) => update(i, "icono", path)} />
+              <IconPickerField label="Ícono" value={h.icono} onChange={(path) => update(i, "icono", path)} />
             </Grid>
             <Grid item xs={12}><TextField {...darkTf} label="Fecha" value={h.fecha || ""} onChange={(e) => update(i, "fecha", e.target.value)} /></Grid>
             <Grid item xs={12}><TextField {...darkTf} label="Título" value={h.titulo || ""} onChange={(e) => update(i, "titulo", e.target.value)} /></Grid>

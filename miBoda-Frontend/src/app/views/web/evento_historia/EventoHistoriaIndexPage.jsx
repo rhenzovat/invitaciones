@@ -3,19 +3,22 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { HistoriaEditor } from "../evento/EventoEditors";
+import { HistoriaEditor, IconPickerField } from "../evento/EventoEditors";
 
 const isIconImage = (v) =>
   !!v && (/^https?:\/\//i.test(v) || v.startsWith("storage_/") || /\.(png|jpe?g|gif|svg|webp)$/i.test(v));
+
+const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/amor.png";
 
 export default function EventoHistoriaIndexPage() {
   useInjectPublicCss();
   const { data, loading, saving, guardarCampos } = useEventoData();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
+  const [icono, setIcono] = useState("");
 
-  const abrir = () => { setItems(data.historia || []); setOpen(true); };
-  const guardar = async () => { if (await guardarCampos({ historia: items })) setOpen(false); };
+  const abrir = () => { setItems(data.historia || []); setIcono(data.icono_historia || ""); setOpen(true); };
+  const guardar = async () => { if (await guardarCampos({ historia: items, icono_historia: icono })) setOpen(false); };
 
   if (loading || !data) return <PageWrap><Typography sx={{ color: "#7a4030" }}>Cargando...</Typography></PageWrap>;
 
@@ -26,7 +29,7 @@ export default function EventoHistoriaIndexPage() {
       <CanvasPhone>
         <EditZone className="section has-flowers" sx={{ py: 3 }}>
           <EzPencil onClick={abrir} />
-          <p className="divider">💕</p>
+          <p className="divider"><img className="divider-icon" src={publicAsset(data.icono_historia || ICONO_DEFAULT)} alt="" /></p>
           <h2 className="script-title">Nuestra Historia</h2>
           <div className="historia-timeline">
             {(data.historia || []).map((h, i) => (
@@ -53,6 +56,7 @@ export default function EventoHistoriaIndexPage() {
 
       {open && (
         <EditPanel open title="Editar nuestra historia" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
           <HistoriaEditor items={items} onChange={setItems} />
         </EditPanel>
       )}

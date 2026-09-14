@@ -92,6 +92,17 @@ class WebEventoController extends Controller
             'musica_src' => 'nullable|string|max:500',
             'musica_volumen' => 'nullable|numeric|min:0|max:1',
 
+            'icono_countdown' => 'nullable|string|max:500',
+            'icono_ubicaciones' => 'nullable|string|max:500',
+            'icono_itinerario' => 'nullable|string|max:500',
+            'icono_vestimenta' => 'nullable|string|max:500',
+            'icono_rsvp' => 'nullable|string|max:500',
+            'icono_regalos' => 'nullable|string|max:500',
+            'icono_video' => 'nullable|string|max:500',
+            'icono_galeria' => 'nullable|string|max:500',
+            'icono_cancion' => 'nullable|string|max:500',
+            'icono_historia' => 'nullable|string|max:500',
+
             'footer_texto' => 'nullable|string',
 
             'momento1_verso_texto' => 'nullable|string',
