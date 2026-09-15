@@ -10,14 +10,18 @@ const LINK_ID = "miboda-public-css";
 export default function useInjectPublicCss() {
   useEffect(() => {
     if (document.getElementById(LINK_ID)) return;
-    const backend = import.meta.env.VITE_AUTHJWT_DOMAIN || "";
     const link = document.createElement("link");
     link.id = LINK_ID;
     link.rel = "stylesheet";
+    // Ruta relativa a la raiz del propio dominio (no al backend de la API):
+    // el sitio publico (public-site) y el panel admin se sirven juntos desde
+    // el mismo despliegue (Vercel en produccion, el server estatico propio
+    // en dev - ver invitacionPublicaPlugin en vite.config.js), asi que el
+    // CSS real vive en "/css/styles.css" sin importar donde este la API.
     // Cache-busting con la hora de carga: el canvas es una vista previa en
     // vivo del diseño real, así que siempre debe reflejar el último CSS
     // (igual que el sitio público, que usa filemtime() para esto mismo).
-    link.href = `${backend}/temp02/css/styles.css?v=${Date.now()}`;
+    link.href = `/css/styles.css?v=${Date.now()}`;
     document.head.appendChild(link);
 
     const fontLink = document.createElement("link");
@@ -31,8 +35,14 @@ export default function useInjectPublicCss() {
 export function publicAsset(path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
-  const backend = import.meta.env.VITE_AUTHJWT_DOMAIN || "";
-  // Fotos subidas desde el admin viven en /storage_/evento/..., no en /temp02/.
-  if (path.startsWith("storage_/")) return `${backend}/${path}`;
-  return `${backend}/temp02/${path}`;
+  // Fotos subidas desde el admin viven en storage_/evento/... y esas SI las
+  // sirve el backend (Railway), no el sitio estatico.
+  if (path.startsWith("storage_/")) {
+    const backend = import.meta.env.VITE_AUTHJWT_DOMAIN || "";
+    return `${backend}/${path}`;
+  }
+  // Cualquier otra ruta (assets/img/...) es un recurso estatico de diseño
+  // que vive junto al panel admin en el mismo dominio (ver comentario en
+  // useInjectPublicCss de arriba), asi que se resuelve relativa a la raiz.
+  return `/${path}`;
 }
