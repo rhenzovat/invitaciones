@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { ActualizarEventoDto } from "./dto/actualizar-evento.dto";
-import { assetUrl, extensionDe, guardarArchivo } from "../common/storage.util";
+import { subirACloudinary } from "../common/cloudinary.util";
 
 @Injectable()
 export class WebEventoService {
@@ -30,12 +30,12 @@ export class WebEventoService {
   }
 
   async subirImagen(file: Express.Multer.File) {
-    const ext = extensionDe(file.originalname);
-    const relPath = await guardarArchivo(file.buffer, "storage_/evento", ext);
+    const carpeta = process.env.CLOUDINARY_FOLDER_EVENTO || "evento";
+    const { secure_url } = await subirACloudinary(file.buffer, carpeta);
     return {
       success: true,
       message: "Imagen subida correctamente.",
-      result: { path: relPath, url: assetUrl(relPath) },
+      result: { path: secure_url, url: secure_url },
     };
   }
 }
