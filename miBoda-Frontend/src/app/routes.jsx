@@ -6,7 +6,6 @@ import Loadable from "./components/Loadable";
 import MatxLayout from "./components/MatxLayout/MatxLayout";
 import sessionRoutes from "./views/sessions/session-routes";
 import materialRoutes from "app/views/material-kit/MaterialRoutes";
-import campusRoutes from "./views/campus/campus-routes";
 // Onboarding p├║blico (sin autenticaci├│n)
 const OnboardingPublicPage   = Loadable(lazy(() => import("app/views/onboarding/OnboardingPublicPage")));
 const OnboardingReportePage  = Loadable(lazy(() => import("app/views/onboarding/OnboardingReportePage")));
@@ -29,8 +28,6 @@ const ObjetosIndexPage = Loadable(lazy(() => import("app/views/objetos/ObjetosIn
 const UsuarioIndexPage = Loadable(lazy(() => import("app/views/usuarios/UsuarioIndexPage")));
 const ProfileIndexPage = Loadable(lazy(() => import("app/views/profile/ProfileIndexPage")));
 
-const ProductoIndexPage = Loadable(lazy(() => import("app/views/producto/ProductoIndexPage")));
-const ProductoImportPage = Loadable(lazy(() => import("app/views/producto/ProductoImportPage")));
 const FooterIndexPage = Loadable(lazy(() => import("app/views/web/footer/FooterIndexPage")));
 const WhatsappConfigIndexPage = Loadable(lazy(() => import("app/views/web/whatsapp/WhatsappConfigIndexPage")));
 const SliderIndexPage = Loadable(lazy(() => import("app/views/web/slider/SliderIndexPage")));
@@ -129,8 +126,6 @@ const routes = [
       { path: "/objetos/index", element: <ObjetosIndexPage /> },
       { path: "/profile/index", element: <ProfileIndexPage /> },
 
-      { path: "/producto/index", element: <ProductoIndexPage /> },
-      { path: "/producto/importar", element: <ProductoImportPage /> },
       { path: "/footer/index", element: <FooterIndexPage /> },
       { path: "/whatsapp/index", element: <WhatsappConfigIndexPage /> },
       { path: "/slider/index", element: <SliderIndexPage /> },
@@ -204,9 +199,6 @@ const routes = [
       { path: "/confianza-item/index", element: <ConfianzaItemIndexPage /> },
       { path: "/informe-sistema/index", element: <InformeSistemaPage /> },
       { path: "/informe_sistema/index", element: <Navigate to="/informe-sistema/index" replace /> },
-
-      // Campus DeliverBox
-      ...campusRoutes,
     ]
   },
 
