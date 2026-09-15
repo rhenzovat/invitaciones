@@ -10,7 +10,7 @@ import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../..
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, GenerosEditor, IconPickerField } from "../evento/EventoEditors";
+import { darkTf, GenerosEditor, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/guitarra.png";
 
@@ -151,7 +151,7 @@ export default function CancionSugerenciasIndexPage() {
 
       {open && (
         <EditPanel open title="Editar 'Sugiere una Canción'" onClose={() => setOpen(false)} onSave={guardarTexto} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_cancion} onChange={(path) => set("icono_cancion", path)} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_cancion} onChange={(path) => set("icono_cancion", path)} excluir={iconosUsadosPorOtrasSecciones(data, "icono_cancion")} />
           <TextField {...darkTf} label="Texto (subtítulo)" multiline minRows={2} value={form.cancion_texto || ""} onChange={(e) => set("cancion_texto", e.target.value)} />
 
           <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)", fontWeight: 700, textTransform: "uppercase", mt: 2, mb: 1 }}>

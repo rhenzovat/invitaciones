@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, IconPickerField } from "../evento/EventoEditors";
+import { darkTf, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/calendario.png";
 
@@ -63,7 +63,7 @@ export default function EventoCountdownIndexPage() {
 
       {open && (
         <EditPanel open title="Editar cuenta regresiva" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_countdown} onChange={(path) => set("icono_countdown", path)} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_countdown} onChange={(path) => set("icono_countdown", path)} excluir={iconosUsadosPorOtrasSecciones(data, "icono_countdown")} />
           <TextField {...darkTf} type="datetime-local" label="Fecha y hora de la boda" InputLabelProps={{ shrink: true }}
             value={form.fecha_boda ? form.fecha_boda.replace(" ", "T").slice(0, 16) : ""} onChange={(e) => set("fecha_boda", e.target.value)} />
           <TextField {...darkTf} label="Fecha en texto" value={form.fecha_boda_texto || ""} onChange={(e) => set("fecha_boda_texto", e.target.value)} />

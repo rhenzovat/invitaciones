@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260">
+  <rect width="400" height="260" fill="#efe3c8"/>
+  <g fill="#A16207" opacity="0.85">
+    <rect x="180" y="70" width="40" height="90" />
+    <polygon points="160,70 200,30 240,70" />
+    <rect x="196" y="15" width="8" height="20" />
+    <rect x="192" y="10" width="16" height="6" />
+  </g>
+  <rect x="0" y="200" width="400" height="60" fill="#c9a24b" opacity="0.25"/>
+  <text x="50%" y="90%" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="#7a5a1e">
+    Ceremonia Religiosa — reemplaza por tu foto
+  </text>
+</svg>

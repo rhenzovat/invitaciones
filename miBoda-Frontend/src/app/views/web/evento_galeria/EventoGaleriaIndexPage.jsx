@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, IconPickerField } from "../evento/EventoEditors";
+import { darkTf, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/camara-reflex-digital.png";
 
@@ -53,7 +53,7 @@ export default function EventoGaleriaIndexPage() {
 
       {open && (
         <EditPanel open title="Editar galería" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_galeria} onChange={(path) => set("icono_galeria", path)} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_galeria} onChange={(path) => set("icono_galeria", path)} excluir={iconosUsadosPorOtrasSecciones(data, "icono_galeria")} />
           <TextField {...darkTf} label="Texto (subtítulo)" multiline minRows={2} value={form.galeria_texto || ""} onChange={(e) => set("galeria_texto", e.target.value)} />
           <TextField {...darkTf} label="Botón: Subir foto" value={form.galeria_boton_subir || ""} onChange={(e) => set("galeria_boton_subir", e.target.value)} />
           <TextField {...darkTf} label="Botón: Ver galería" value={form.galeria_boton_ver || ""} onChange={(e) => set("galeria_boton_ver", e.target.value)} />

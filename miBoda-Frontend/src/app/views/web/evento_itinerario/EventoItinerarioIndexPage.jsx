@@ -3,7 +3,7 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { ItinerarioEditor, IconPickerField } from "../evento/EventoEditors";
+import { ItinerarioEditor, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/fecha-limite.png";
 
@@ -49,7 +49,7 @@ export default function EventoItinerarioIndexPage() {
 
       {open && (
         <EditPanel open title="Editar itinerario" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} excluir={iconosUsadosPorOtrasSecciones(data, "icono_itinerario")} />
           <ItinerarioEditor items={items} onChange={setItems} />
         </EditPanel>
       )}

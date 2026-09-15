@@ -3,7 +3,7 @@ import { Typography, TextField, FormControlLabel, Switch } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { TransferenciasEditor, YapePlinEditor, darkTf, IconPickerField } from "../evento/EventoEditors";
+import { TransferenciasEditor, YapePlinEditor, darkTf, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/caja-de-regalo.png";
 
@@ -88,7 +88,7 @@ export default function EventoRegalosIndexPage() {
 
       {panel === "config" && (
         <EditPanel open title="Editar configuración de regalos" onClose={() => setPanel(null)} onSave={guardarConfig} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_regalos} onChange={(path) => setForm((p) => ({ ...p, icono_regalos: path }))} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_regalos} onChange={(path) => setForm((p) => ({ ...p, icono_regalos: path }))} excluir={iconosUsadosPorOtrasSecciones(data, "icono_regalos")} />
           <FormControlLabel
             sx={{ color: "#f1f5f9", mb: 1 }}
             control={<Switch checked={!!form.regalos_sobre_activo} onChange={(e) => setForm((p) => ({ ...p, regalos_sobre_activo: e.target.checked }))} />}

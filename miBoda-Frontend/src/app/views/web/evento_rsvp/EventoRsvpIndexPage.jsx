@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, IconPickerField } from "../evento/EventoEditors";
+import { darkTf, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/papiro.png";
 
@@ -46,7 +46,7 @@ export default function EventoRsvpIndexPage() {
 
       {open && (
         <EditPanel open title="Editar RSVP" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_rsvp} onChange={(path) => setForm((p) => ({ ...p, icono_rsvp: path }))} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_rsvp} onChange={(path) => setForm((p) => ({ ...p, icono_rsvp: path }))} excluir={iconosUsadosPorOtrasSecciones(data, "icono_rsvp")} />
           <TextField {...darkTf} label="Fecha límite (texto)" value={form.rsvp_fecha_limite || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_fecha_limite: e.target.value }))} />
           <TextField {...darkTf} label="Nombre de contacto" value={form.rsvp_contacto_nombre || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_contacto_nombre: e.target.value }))} />
           <TextField {...darkTf} label="WhatsApp (solo números, con código de país)" value={form.rsvp_contacto_whatsapp || ""} onChange={(e) => setForm((p) => ({ ...p, rsvp_contacto_whatsapp: e.target.value }))} />

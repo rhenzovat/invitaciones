@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, IconPickerField } from "../evento/EventoEditors";
+import { darkTf, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/silla-de-director.png";
 
@@ -37,7 +37,7 @@ export default function EventoVideoIndexPage() {
 
       {open && (
         <EditPanel open title="Editar video" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_video} onChange={(path) => set("icono_video", path)} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_video} onChange={(path) => set("icono_video", path)} excluir={iconosUsadosPorOtrasSecciones(data, "icono_video")} />
           <TextField {...darkTf} label="Ruta del video (assets/video/...)" value={form.video_src || ""} onChange={(e) => set("video_src", e.target.value)} />
           <TextField {...darkTf} label="Texto" multiline minRows={2} value={form.video_texto || ""} onChange={(e) => set("video_texto", e.target.value)} />
         </EditPanel>

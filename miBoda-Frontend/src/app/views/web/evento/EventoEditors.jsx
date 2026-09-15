@@ -91,7 +91,24 @@ const ICONOS_PRESET = [
   "papiro.png", "silla-de-director.png",
 ];
 
-export function IconPickerField({ label, value, onChange }) {
+// Los 10 campos "icono_*" de web_evento (uno por sección) — se usan para que
+// cada selector oculte los íconos que otra sección ya tiene asignados, y así
+// la galería de "elige un ícono" no se llene de opciones ya ocupadas.
+const CAMPOS_ICONO_SECCION = [
+  "icono_countdown", "icono_ubicaciones", "icono_itinerario", "icono_vestimenta",
+  "icono_rsvp", "icono_regalos", "icono_video", "icono_galeria", "icono_cancion", "icono_historia",
+];
+
+/** Íconos que YA usan las demás secciones (para excluirlos del selector de `campoActual`). */
+export function iconosUsadosPorOtrasSecciones(data, campoActual) {
+  if (!data) return [];
+  return CAMPOS_ICONO_SECCION
+    .filter((campo) => campo !== campoActual)
+    .map((campo) => data[campo])
+    .filter(Boolean);
+}
+
+export function IconPickerField({ label, value, onChange, excluir = [] }) {
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
 
@@ -141,7 +158,7 @@ export function IconPickerField({ label, value, onChange }) {
 
       <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.45)", mb: 0.6 }}>O elige un ícono:</Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8, mb: 1.2 }}>
-        {ICONOS_PRESET.map((file) => {
+        {ICONOS_PRESET.filter((file) => !excluir.includes(ICONOS_PRESET_PATH + file)).map((file) => {
           const path = ICONOS_PRESET_PATH + file;
           const selected = value === path;
           return (
@@ -237,7 +254,7 @@ export function UbicacionesEditor({ items, onChange }) {
     copy[i] = { ...copy[i], [field]: value };
     onChange(copy);
   };
-  const add = () => onChange([...items, { icono: "📍", imagen: "", tipo: "", lugar: "", horario: "", direccion: "", mapsUrl: "" }]);
+  const add = () => onChange([...items, { icono: ICONOS_PRESET_PATH + "mapa.png", imagen: "", tipo: "", lugar: "", horario: "", direccion: "", mapsUrl: "" }]);
   const remove = (i) => onChange(items.filter((_, idx) => idx !== i));
 
   return (
@@ -246,8 +263,8 @@ export function UbicacionesEditor({ items, onChange }) {
         <ItemCard key={i}>
           <RemoveBtn size="small" onClick={() => remove(i)}><DeleteIcon sx={{ fontSize: 14 }} /></RemoveBtn>
           <Grid container spacing={1}>
-            <Grid item xs={3}><TextField {...darkTf} label="Ícono" value={u.icono || ""} onChange={(e) => update(i, "icono", e.target.value)} /></Grid>
-            <Grid item xs={9}><TextField {...darkTf} label="Tipo" value={u.tipo || ""} onChange={(e) => update(i, "tipo", e.target.value)} /></Grid>
+            <Grid item xs={12}><IconPickerField label="Ícono" value={u.icono} onChange={(path) => update(i, "icono", path)} /></Grid>
+            <Grid item xs={12}><TextField {...darkTf} label="Tipo" value={u.tipo || ""} onChange={(e) => update(i, "tipo", e.target.value)} /></Grid>
             <Grid item xs={12}><TextField {...darkTf} label="Lugar" value={u.lugar || ""} onChange={(e) => update(i, "lugar", e.target.value)} /></Grid>
             <Grid item xs={12}><TextField {...darkTf} label="Horario" value={u.horario || ""} onChange={(e) => update(i, "horario", e.target.value)} /></Grid>
             <Grid item xs={12}><TextField {...darkTf} label="Dirección" value={u.direccion || ""} onChange={(e) => update(i, "direccion", e.target.value)} /></Grid>

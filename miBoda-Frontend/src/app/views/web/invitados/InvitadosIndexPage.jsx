@@ -37,7 +37,22 @@ const TableWrap = styled(Paper)(() => ({
   boxShadow: "0 4px 24px rgba(44,26,14,0.08)",
 }));
 
-const GRID_COLS = "1fr 100px 1fr 90px";
+const GRID_COLS = "1.3fr 70px 105px 1fr 120px 1fr 80px";
+
+function formatearFechaRsvp(iso) {
+  if (!iso) return "—";
+  try {
+    return new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
+  } catch {
+    return "—";
+  }
+}
+
+const RSVP_ESTADO_CHIP = {
+  confirmado: { label: "Confirmó", bgcolor: "rgba(34,197,94,0.14)", color: "#16a34a" },
+  no_asiste: { label: "No asiste", bgcolor: "rgba(239,68,68,0.14)", color: "#dc2626" },
+  pendiente: { label: "Pendiente", bgcolor: "rgba(148,163,184,0.18)", color: "#64748b" },
+};
 
 const THead = styled(Box)(() => ({
   display: "grid",
@@ -163,6 +178,9 @@ export default function InvitadosIndexPage() {
         <THead>
           <THeadCell>Nombre</THeadCell>
           <THeadCell>Pases</THeadCell>
+          <THeadCell>Fecha confirmó</THeadCell>
+          <THeadCell>Acompañante</THeadCell>
+          <THeadCell>Estado RSVP</THeadCell>
           <THeadCell>Notas</THeadCell>
           <THeadCell></THeadCell>
         </THead>
@@ -176,6 +194,14 @@ export default function InvitadosIndexPage() {
             <TRow key={inv.id_invitado}>
               <TCell><Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#2c1a0e" }}>{inv.nombre}</Typography></TCell>
               <TCell><Chip size="small" label={inv.pases_asignados} sx={{ bgcolor: "rgba(204,107,142,0.12)", color: "#a0455e", fontWeight: 700 }} /></TCell>
+              <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{formatearFechaRsvp(inv.rsvp_fecha)}</Typography></TCell>
+              <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{inv.rsvp_acompanante || "—"}</Typography></TCell>
+              <TCell>
+                {(() => {
+                  const chip = RSVP_ESTADO_CHIP[inv.rsvp_estado] || RSVP_ESTADO_CHIP.pendiente;
+                  return <Chip size="small" label={chip.label} sx={{ bgcolor: chip.bgcolor, color: chip.color, fontWeight: 700 }} />;
+                })()}
+              </TCell>
               <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{inv.notas || "—"}</Typography></TCell>
               <TCell sx={{ gap: 0.5 }}>
                 <Tooltip title="Editar">

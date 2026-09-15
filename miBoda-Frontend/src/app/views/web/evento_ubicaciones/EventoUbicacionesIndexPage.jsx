@@ -3,9 +3,12 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { UbicacionesEditor, IconPickerField } from "../evento/EventoEditors";
+import { UbicacionesEditor, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/mapa.png";
+
+const isIconImage = (v) =>
+  !!v && (/^https?:\/\//i.test(v) || v.startsWith("storage_/") || /\.(png|jpe?g|gif|svg|webp)$/i.test(v));
 
 export default function EventoUbicacionesIndexPage() {
   useInjectPublicCss();
@@ -36,7 +39,12 @@ export default function EventoUbicacionesIndexPage() {
               <div className="card" key={i}>
                 {u.imagen && <img className="card-img" src={publicAsset(u.imagen)} alt={u.tipo} />}
                 <div className="card-body">
-                  <h3>{u.icono} {u.tipo}</h3>
+                  {u.icono && (
+                    <div className="card-icon">
+                      {isIconImage(u.icono) ? <img src={publicAsset(u.icono)} alt="" /> : u.icono}
+                    </div>
+                  )}
+                  <h3>{u.tipo}</h3>
                   <p><strong>{u.lugar}</strong></p>
                   <p>{u.horario}</p>
                   <p>{u.direccion}</p>
@@ -50,7 +58,7 @@ export default function EventoUbicacionesIndexPage() {
 
       {open && (
         <EditPanel open title="Editar ubicaciones" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} excluir={iconosUsadosPorOtrasSecciones(data, "icono_ubicaciones")} />
           <UbicacionesEditor items={items} onChange={setItems} />
         </EditPanel>
       )}

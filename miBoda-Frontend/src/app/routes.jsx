@@ -38,7 +38,6 @@ const SliderIndexPage = Loadable(lazy(() => import("app/views/web/slider/SliderI
 const AboutIndexPage = Loadable(lazy(() => import("app/views/web/about/AboutIndexPage")));
 const PlanesIndexPage = Loadable(lazy(() => import("app/views/web/planes/PlanesIndexPage")));
 
-const FacturasIndexPage = Loadable(lazy(() => import("app/views/ventas/facturas/FacturasIndexPage")));
 const BalanceVentasIndexPage = Loadable(lazy(() => import("app/views/ventas/balance_ventas/BalanceVentasIndexPage")));
 const CategoriaIndexPage = Loadable(lazy(() => import("app/views/categoria/CategoriaIndexPage")));
 
@@ -141,7 +140,6 @@ const routes = [
       { path: "/nuestro_equipo/index", element: <NuestroEquipoIndexPage /> },
 
 
-      { path: "/facturas/index", element: <FacturasIndexPage /> },
       { path: "/balance_ventas/index", element: <BalanceVentasIndexPage /> },
       { path: "/categoria/index", element: <CategoriaIndexPage /> },
       { path: "/promocion/index", element: <PromocionIndexPage /> },

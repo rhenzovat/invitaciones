@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// Tabla compartida `users` del monolito Laravel. Solo se declaran las
+/// columnas que este backend necesita leer/escribir.
+model User {
+  id                        Int      @id @default(autoincrement())
+  name                      String   @db.VarChar(255)
+  email                     String   @unique @db.VarChar(255)
+  password                  String   @db.VarChar(255)
+  avatar                    String?  @db.VarChar(255)
+  Activo                    String   @default("S") @db.VarChar(1)
+  es_administrador_principal Boolean @default(false)
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @default(now()) @updatedAt @map("updated_at")
+
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("refresh_tokens")
+}
+
+/// Configuracion completa de la invitacion (una sola fila activa).
+model WebEvento {
+  id_evento Int @id @default(autoincrement())
+
+  novio                 String?   @db.VarChar(150)
+  novia                 String?   @db.VarChar(150)
+  monograma             String?   @db.VarChar(50)
+  fecha_boda            DateTime?
+  fecha_boda_texto      String?   @db.VarChar(150)
+  hero_subtitulo        String?   @db.VarChar(255)
+  hero_foto             String?   @db.VarChar(500)
+  invitado_por_defecto  String?   @db.VarChar(150)
+  pases_por_defecto     Int       @default(2)
+  capacidad_maxima      Int       @default(100)
+
+  frase_texto      String? @db.Text
+  frase_referencia String? @db.VarChar(150)
+
+  envelope_verse_texto      String? @db.Text
+  envelope_verse_referencia String? @db.VarChar(150)
+  envelope_sello_img        String? @db.VarChar(500)
+  envelope_foto1            String? @db.VarChar(500)
+  envelope_foto2            String? @db.VarChar(500)
+
+  countdown_nota_1 String? @db.Text
+  countdown_nota_2 String? @db.Text
+
+  /// [{titulo, personas: string[]}]
+  familia Json?
+  /// [{icono, imagen, tipo, lugar, horario, direccion, mapsUrl}]
+  ubicaciones Json?
+  /// [{hora, titulo, imagen}]
+  itinerario Json?
+  /// [{fecha, titulo, descripcion, icono, imagen}]
+  historia Json?
+
+  vestimenta_tipo         String? @db.VarChar(100)
+  vestimenta_restriccion  String? @db.VarChar(255)
+  vestimenta_img_novia    String? @db.VarChar(500)
+  vestimenta_img_novio    String? @db.VarChar(500)
+  /// string[] (hex)
+  vestimenta_colores Json?
+
+  solo_adultos_activo Boolean @default(false)
+  solo_adultos_texto  String? @db.Text
+
+  foto_pareja_src String? @db.VarChar(500)
+
+  rsvp_fecha_limite       String? @db.VarChar(100)
+  rsvp_contacto_nombre    String? @db.VarChar(150)
+  rsvp_contacto_whatsapp  String? @db.VarChar(30)
+
+  regalos_sobre_activo     Boolean @default(true)
+  regalos_tienda_nombre    String? @db.VarChar(150)
+  regalos_tienda_url       String? @db.VarChar(500)
+  regalos_direccion_fisica String? @db.VarChar(255)
+  /// [{banco, titular, cuenta, cci}]
+  regalos_transferencias Json?
+  /// [{app, nombre, numero}]
+  regalos_yape_plin Json?
+
+  video_src           String? @db.VarChar(500)
+  video_texto         String? @db.Text
+  estacionamiento_texto String? @db.Text
+
+  musica_src     String? @db.VarChar(500)
+  musica_volumen Decimal @default(0.40) @db.Decimal(3, 2)
+
+  footer_texto String? @db.Text
+
+  momento1_verso_texto      String? @db.Text
+  momento1_verso_referencia String? @db.VarChar(150)
+  momento1_foto             String? @db.VarChar(500)
+  momento2_foto             String? @db.VarChar(500)
+  momento2_verso_texto      String? @db.Text
+  momento2_verso_referencia String? @db.VarChar(150)
+  momento3_foto             String? @db.VarChar(500)
+
+  galeria_texto        String? @db.Text
+  galeria_nota         String? @db.VarChar(255)
+  galeria_boton_subir  String? @db.VarChar(100)
+  galeria_boton_ver    String? @db.VarChar(100)
+
+  cancion_texto         String? @db.Text
+  cancion_label_nombre  String? @db.VarChar(100)
+  cancion_label_genero  String? @db.VarChar(100)
+  cancion_label_de      String? @db.VarChar(100)
+  cancion_boton         String? @db.VarChar(100)
+  /// string[]
+  cancion_generos Json?
+
+  icono_countdown   String?
+  icono_ubicaciones String?
+  icono_itinerario  String?
+  icono_vestimenta  String?
+  icono_rsvp        String?
+  icono_regalos     String?
+  icono_video       String?
+  icono_galeria     String?
+  icono_cancion     String?
+  icono_historia    String?
+
+  /// {cloudName, uploadPreset, folder, tag}
+  cloudinary_config Json?
+  /// {formId, entryNombre, entryAcompanante, entryAsistencia}
+  google_form_rsvp Json?
+  /// {formId, entryCancion, entryArtista, entryDe}
+  google_form_cancion Json?
+  /// {formId, entryUrl}
+  google_form_galeria Json?
+
+  Activo String @default("S") @db.VarChar(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("web_evento")
+}
+
+model WebInvitado {
+  id_invitado      Int      @id @default(autoincrement())
+  nombre           String   @db.VarChar(200)
+  pases_asignados  Int      @default(1)
+  notas            String?  @db.Text
+  Activo           String   @default("S") @db.VarChar(1)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  respuestas WebRsvpRespuesta[]
+
+  @@map("web_invitados")
+}
+
+model WebRsvpRespuesta {
+  id_rsvp_respuesta Int      @id @default(autoincrement())
+  id_invitado       Int?
+  nombre            String   @db.VarChar(200)
+  acompanante       String?  @db.VarChar(200)
+  asistira          String   @db.VarChar(1)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  invitado WebInvitado? @relation(fields: [id_invitado], references: [id_invitado])
+
+  @@map("web_rsvp_respuestas")
+}
+
+model WebCancionSugerencia {
+  id_sugerencia   Int      @id @default(autoincrement())
+  nombre_cancion  String   @db.VarChar(200)
+  genero          String?  @db.VarChar(200)
+  nombre_invitado String?  @db.VarChar(200)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("web_cancion_sugerencias")
+}
+
+model WebGaleriaFoto {
+  id_foto              Int      @id @default(autoincrement())
+  url_imagen           String   @db.VarChar(500)
+  url_imagen_thumb     String?  @db.VarChar(500)
+  cloudinary_public_id String?  @db.VarChar(255)
+  orden                Int      @default(0)
+  Activo               String   @default("S") @db.VarChar(1)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("web_galeria_fotos")
+}

@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { ColoresEditor, darkTf, ImageUploadField, IconPickerField } from "../evento/EventoEditors";
+import { ColoresEditor, darkTf, ImageUploadField, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const ICONO_DEFAULT = "assets/img/decor/icon-invitacion/camisa.png";
 
@@ -55,7 +55,7 @@ export default function EventoVestimentaIndexPage() {
 
       {panel === "texto" && (
         <EditPanel open title="Editar vestimenta" onClose={() => setPanel(null)} onSave={guardarTexto} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={form.icono_vestimenta} onChange={(path) => setForm((p) => ({ ...p, icono_vestimenta: path }))} />
+          <IconPickerField label="Ícono de la sección" value={form.icono_vestimenta} onChange={(path) => setForm((p) => ({ ...p, icono_vestimenta: path }))} excluir={iconosUsadosPorOtrasSecciones(data, "icono_vestimenta")} />
           <TextField {...darkTf} label="Tipo (ej: Formal)" value={form.vestimenta_tipo || ""} onChange={(e) => setForm((p) => ({ ...p, vestimenta_tipo: e.target.value }))} />
           <TextField {...darkTf} label="Restricción" value={form.vestimenta_restriccion || ""} onChange={(e) => setForm((p) => ({ ...p, vestimenta_restriccion: e.target.value }))} />
         </EditPanel>

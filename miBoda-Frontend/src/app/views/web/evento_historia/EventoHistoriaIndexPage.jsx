@@ -3,7 +3,7 @@ import { Typography } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { HistoriaEditor, IconPickerField } from "../evento/EventoEditors";
+import { HistoriaEditor, IconPickerField, iconosUsadosPorOtrasSecciones } from "../evento/EventoEditors";
 
 const isIconImage = (v) =>
   !!v && (/^https?:\/\//i.test(v) || v.startsWith("storage_/") || /\.(png|jpe?g|gif|svg|webp)$/i.test(v));
@@ -56,7 +56,7 @@ export default function EventoHistoriaIndexPage() {
 
       {open && (
         <EditPanel open title="Editar nuestra historia" onClose={() => setOpen(false)} onSave={guardar} saving={saving}>
-          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} />
+          <IconPickerField label="Ícono de la sección" value={icono} onChange={setIcono} excluir={iconosUsadosPorOtrasSecciones(data, "icono_historia")} />
           <HistoriaEditor items={items} onChange={setItems} />
         </EditPanel>
       )}
