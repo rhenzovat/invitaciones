@@ -267,16 +267,16 @@ function renderUbicaciones() {
   const list = document.getElementById("ubicaciones-list");
   list.innerHTML = CONFIG.ubicaciones.map(u => `
     <div class="card">
-      <img class="card-img" src="${u.imagen}" alt="${u.tipo}">
+      <img class="card-img" loading="lazy" src="${u.imagen}" alt="${u.tipo}">
       <div class="card-body">
-        ${u.icono ? `<div class="card-icon">${isIconImage(u.icono) ? `<img src="${u.icono}" alt="">` : u.icono}</div>` : ""}
+        ${u.icono ? `<div class="card-icon">${isIconImage(u.icono) ? `<img loading="lazy" src="${u.icono}" alt="">` : u.icono}</div>` : ""}
         <h3>${u.tipo}</h3>
         <p><strong>${u.lugar}</strong></p>
         <p>${u.horario}</p>
         <p>${u.direccion}</p>
         <a class="btn-link" href="${u.mapsUrl}" target="_blank" rel="noopener">Ver Mapa</a>
-        <img class="card-flower card-flower-left" src="${ASSET_BASE}assets/img/decor/flor-esquinas - cards.png" alt="" aria-hidden="true">
-        <img class="card-flower card-flower-right" src="${ASSET_BASE}assets/img/decor/flor-esquinas - cards.png" alt="" aria-hidden="true">
+        <img class="card-flower card-flower-left" loading="lazy" src="${ASSET_BASE}assets/img/decor/flor-esquinas - cards.png" alt="" aria-hidden="true">
+        <img class="card-flower card-flower-right" loading="lazy" src="${ASSET_BASE}assets/img/decor/flor-esquinas - cards.png" alt="" aria-hidden="true">
       </div>
     </div>
   `).join("");
@@ -286,7 +286,7 @@ function renderItinerario() {
   const list = document.getElementById("itinerario-list");
   list.innerHTML = CONFIG.itinerario.map((i, index) => `
     <div class="itinerario-row ${index % 2 === 0 ? "from-left" : "from-right"}">
-      <span class="itinerario-node"><img src="${i.imagen}" alt=""></span>
+      <span class="itinerario-node"><img loading="lazy" src="${i.imagen}" alt=""></span>
       <div class="itinerario-content">
         <div class="itinerario-hora">${i.hora}</div>
         <div class="itinerario-titulo">${i.titulo}</div>
@@ -448,10 +448,10 @@ function renderHistoria() {
   const list = document.getElementById("historia-list");
   list.innerHTML = CONFIG.historia.map(h => `
     <div class="historia-row">
-      <span class="historia-node">${isIconImage(h.icono) ? `<img class="historia-node-img" src="${h.icono}" alt="">` : h.icono}</span>
+      <span class="historia-node">${isIconImage(h.icono) ? `<img class="historia-node-img" loading="lazy" src="${h.icono}" alt="">` : h.icono}</span>
       <div class="historia-card">
         <div class="historia-photo-wrap">
-          <img class="historia-photo" src="${h.imagen}" alt="${h.titulo}">
+          <img class="historia-photo" loading="lazy" src="${h.imagen}" alt="${h.titulo}">
           <span class="historia-badge">${h.fecha}</span>
         </div>
         <div class="historia-body">
