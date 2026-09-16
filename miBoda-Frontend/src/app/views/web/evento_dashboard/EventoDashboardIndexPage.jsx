@@ -367,7 +367,17 @@ export default function EventoDashboardIndexPage() {
           <CardTitle><CheckroomIcon sx={{ fontSize: 17, mr: 0.8, verticalAlign: "text-bottom" }} />Información Adicional</CardTitle>
           <Typography sx={{ fontSize: "0.72rem", color: "#8a7a5c", fontWeight: 700, textTransform: "uppercase", mb: 0.4 }}>Código de vestimenta</Typography>
           <Typography sx={{ fontSize: "0.95rem", fontFamily: "'Playfair Display', serif", color: COLORS.dorado, mb: 0.6 }}>{evento?.vestimenta_tipo || "—"}</Typography>
-          <Typography sx={{ fontSize: "0.78rem", color: "#5c4f3a" }}>{evento?.vestimenta_restriccion || "—"}</Typography>
+          <Typography sx={{ fontSize: "0.78rem", color: "#5c4f3a", mb: 1 }}>{evento?.vestimenta_restriccion || "—"}</Typography>
+          {(evento?.vestimenta_colores || []).length > 0 && (
+            <>
+              <Typography sx={{ fontSize: "0.72rem", color: "#8a7a5c", fontWeight: 700, textTransform: "uppercase", mb: 0.6 }}>Colores recomendados</Typography>
+              <Box sx={{ display: "flex", gap: 0.8 }}>
+                {evento.vestimenta_colores.map((c, i) => (
+                  <Box key={i} sx={{ width: 22, height: 22, borderRadius: "50%", background: c, border: "1px solid rgba(0,0,0,0.1)" }} />
+                ))}
+              </Box>
+            </>
+          )}
         </Card>
       </Grid>
 
