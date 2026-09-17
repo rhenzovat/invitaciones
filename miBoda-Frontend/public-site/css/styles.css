@@ -1165,6 +1165,12 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+  /* El badge de fondo es dorado (.historia-node), asi que cualquier
+     icono subido aqui se fuerza a blanco puro sin importar su color
+     original: brightness(0) deja solo la silueta en negro (conserva
+     el alfa), invert(1) la vuelve blanca. Asi un icono nuevo que se
+     suba siempre se ve bien aqui, sin tener que recolorearlo a mano. */
+  filter: brightness(0) invert(1);
 }
 
 .historia-card {
