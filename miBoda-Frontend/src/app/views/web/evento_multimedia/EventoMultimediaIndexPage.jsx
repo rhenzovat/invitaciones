@@ -3,7 +3,7 @@ import { Typography, TextField } from "@mui/material";
 import useInjectPublicCss, { publicAsset } from "../evento/useInjectPublicCss";
 import useEventoData from "../evento/useEventoData";
 import { PageWrap, ModuleHeader, CanvasPhone, EditZone, EzPencil, EditPanel } from "../evento/EventoCanvasChrome";
-import { darkTf, ImageUploadField } from "../evento/EventoEditors";
+import { darkTf, ImageUploadField, AudioUploadField } from "../evento/EventoEditors";
 
 export default function EventoMultimediaIndexPage() {
   useInjectPublicCss();
@@ -37,7 +37,9 @@ export default function EventoMultimediaIndexPage() {
 
         <EditZone sx={{ p: 2, textAlign: "center" }}>
           <EzPencil onClick={() => abrir("musica", { musica_src: data.musica_src, musica_volumen: data.musica_volumen })} tip="Editar música de fondo" />
-          <Typography sx={{ fontSize: "0.8rem", color: "#7a4030" }}>🎵 Música de fondo: {data.musica_src || "—"} (volumen {data.musica_volumen})</Typography>
+          <Typography sx={{ fontSize: "0.8rem", color: "#7a4030" }}>
+            🎵 Música de fondo: {data.musica_src ? "canción cargada" : "—"} (volumen {data.musica_volumen})
+          </Typography>
         </EditZone>
       </CanvasPhone>
 
@@ -53,7 +55,7 @@ export default function EventoMultimediaIndexPage() {
       )}
       {panel === "musica" && (
         <EditPanel open title="Editar música de fondo" onClose={() => setPanel(null)} onSave={guardar} saving={saving}>
-          <TextField {...darkTf} label="Ruta del audio (assets/audio/...)" value={form.musica_src || ""} onChange={(e) => set("musica_src", e.target.value)} />
+          <AudioUploadField label="Canción" value={form.musica_src} onChange={(path) => set("musica_src", path)} />
           <TextField {...darkTf} type="number" label="Volumen (0 a 1)" inputProps={{ step: 0.05, min: 0, max: 1 }}
             value={form.musica_volumen ?? 0.4} onChange={(e) => set("musica_volumen", parseFloat(e.target.value))} />
         </EditPanel>

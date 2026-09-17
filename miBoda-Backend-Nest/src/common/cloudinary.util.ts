@@ -19,11 +19,15 @@ export interface CloudinaryUploadResult {
 }
 
 /** Sube un buffer a Cloudinary (carpeta indicada) y devuelve la URL publica + public_id. */
-export function subirACloudinary(buffer: Buffer, folder: string): Promise<CloudinaryUploadResult> {
+export function subirACloudinary(
+  buffer: Buffer,
+  folder: string,
+  resourceType: "image" | "video" = "image",
+): Promise<CloudinaryUploadResult> {
   asegurarConfig();
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
+      { folder, resource_type: resourceType },
       (error, result) => {
         if (error || !result) return reject(error ?? new Error("Cloudinary no devolvio resultado"));
         resolve({ secure_url: result.secure_url, public_id: result.public_id });

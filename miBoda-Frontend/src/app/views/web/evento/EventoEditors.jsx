@@ -4,7 +4,8 @@ import { styled } from "@mui/material/styles";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UploadIcon from "@mui/icons-material/CloudUpload";
-import { subirImagen } from "../../../api/web_evento.api";
+import AudiotrackIcon from "@mui/icons-material/Audiotrack";
+import { subirImagen, subirAudio } from "../../../api/web_evento.api";
 import { publicAsset } from "./useInjectPublicCss";
 import { handleErrorMessages } from "../../../components/notify-messages";
 
@@ -79,6 +80,46 @@ export function ImageUploadField({ label, value, onChange }) {
           <input type="file" accept="image/*" hidden onChange={handleFile} />
         </Button>
       </Box>
+    </Box>
+  );
+}
+
+// ─── SUBIR CANCIÓN (archivo de audio) ─────────────────────────────────────────
+export function AudioUploadField({ label, value, onChange }) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await subirAudio(file);
+      onChange(res.path);
+    } catch (err) {
+      handleErrorMessages("Error", err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <Box sx={{ mb: 1.6 }}>
+      {label && <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.55)", mb: 0.6 }}>{label}</Typography>}
+      {value && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <AudiotrackIcon sx={{ fontSize: 18, color: "#f5c6d8" }} />
+          <audio controls src={publicAsset(value)} style={{ height: 32, flex: 1, minWidth: 0 }} />
+        </Box>
+      )}
+      <Button
+        component="label" size="small" variant="outlined" disabled={uploading}
+        startIcon={uploading ? <CircularProgress size={14} /> : <UploadIcon sx={{ fontSize: 16 }} />}
+        sx={{ textTransform: "none", color: "#f5c6d8", borderColor: "rgba(204,107,142,0.4)", fontSize: "0.72rem" }}
+      >
+        {uploading ? "Subiendo..." : value ? "Cambiar canción" : "Subir canción"}
+        <input type="file" accept="audio/*" hidden onChange={handleFile} />
+      </Button>
     </Box>
   );
 }

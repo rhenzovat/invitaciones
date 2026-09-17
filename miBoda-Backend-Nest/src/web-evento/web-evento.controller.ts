@@ -18,6 +18,9 @@ import { WebEventoService } from "./web-evento.service";
 const IMAGE_MIME = /^image\/(jpeg|jpg|png|webp|gif|svg\+xml)$/;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10MB, igual que Laravel
 
+const AUDIO_MIME = /^audio\/(mpeg|mp3|wav|x-wav|ogg|mp4|x-m4a|aac)$/;
+const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15MB alcanza de sobra para una cancion en mp3
+
 @Controller("web_evento")
 @UseGuards(JwtAuthGuard)
 export class WebEventoController {
@@ -43,5 +46,16 @@ export class WebEventoController {
       throw new BadRequestException("El archivo debe ser una imagen (jpeg, png, webp, gif, svg).");
     }
     return this.service.subirImagen(file);
+  }
+
+  @Post("subir_audio")
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor("audio", { limits: { fileSize: MAX_AUDIO_BYTES } }))
+  subirAudio(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException("El campo audio es requerido.");
+    if (!AUDIO_MIME.test(file.mimetype)) {
+      throw new BadRequestException("El archivo debe ser un audio (mp3, wav, ogg, m4a, aac).");
+    }
+    return this.service.subirAudio(file);
   }
 }

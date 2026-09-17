@@ -17,3 +17,9 @@ export function subirImagen(file) {
   fd.append('imagen', file);
   return from(apiFormDataClient.post(`${URL}/subir_imagen`, fd)).pipe(map((r) => r.data.result)).toPromise();
 }
+
+export function subirAudio(file) {
+  const fd = new FormData();
+  fd.append('audio', file);
+  return from(apiFormDataClient.post(`${URL}/subir_audio`, fd)).pipe(map((r) => r.data.result)).toPromise();
+}

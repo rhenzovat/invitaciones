@@ -38,4 +38,14 @@ export class WebEventoService {
       result: { path: secure_url, url: secure_url },
     };
   }
+
+  async subirAudio(file: Express.Multer.File) {
+    const carpeta = process.env.CLOUDINARY_FOLDER_EVENTO || "evento";
+    const { secure_url } = await subirACloudinary(file.buffer, carpeta, "video");
+    return {
+      success: true,
+      message: "Canción subida correctamente.",
+      result: { path: secure_url, url: secure_url },
+    };
+  }
 }
