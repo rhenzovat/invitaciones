@@ -632,7 +632,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 
 .card-flower-left { left: -0.5rem; transform: scaleY(-1); }
 .card-flower-right { right: -0.5rem; transform: scale(-1, -1); }
-.card-icon { font-size: 1.8rem; margin-bottom: 0.75rem; }
+.card-icon { font-size: 1.8rem; margin-bottom: 0.75rem; display: flex; justify-content: center; }
 .card-icon img { width: 2.2rem; height: 2.2rem; object-fit: contain; }
 .card h3 { font-family: var(--font-script); font-size: 1.5rem; color: var(--color-terracota); margin-bottom: 0.4rem; }
 .card p { margin: 0.2rem 0; opacity: 0.85; }
