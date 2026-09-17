@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Paper, Chip, IconButton, Tooltip, TextField, Button, LinearProgress } from "@mui/material";
+import { Box, Typography, Paper, Chip, IconButton, Tooltip, TextField, Button, LinearProgress, InputAdornment } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import GroupsIcon from "@mui/icons-material/Groups";
+import SearchIcon from "@mui/icons-material/Search";
+import CloseIcon from "@mui/icons-material/Close";
 
 import { listar, crear, actualizar, eliminar } from "../../../api/web_invitados.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
@@ -38,6 +40,15 @@ const TableWrap = styled(Paper)(() => ({
 }));
 
 const GRID_COLS = "1.3fr 70px 105px 1fr 120px 1fr 80px";
+
+function normalizar(s) {
+  return (s || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
 
 function formatearFechaRsvp(iso) {
   if (!iso) return "—";
@@ -96,6 +107,7 @@ export default function InvitadosIndexPage() {
   const [saving, setSaving] = useState(false);
   const [panel, setPanel] = useState(false);
   const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "" });
+  const [busqueda, setBusqueda] = useState("");
 
   const cargar = async () => {
     setLoading(true);
@@ -140,6 +152,15 @@ export default function InvitadosIndexPage() {
   const pct = capacidad ? Math.min(100, Math.round((pasesTotales / capacidad) * 100)) : 0;
   const sobrepasado = pasesTotales > capacidad;
 
+  const terminoBusqueda = normalizar(busqueda);
+  const invitadosFiltrados = terminoBusqueda
+    ? invitados.filter((inv) =>
+        normalizar(inv.nombre).includes(terminoBusqueda) ||
+        normalizar(inv.notas).includes(terminoBusqueda) ||
+        normalizar(inv.rsvp_acompanante).includes(terminoBusqueda),
+      )
+    : invitados;
+
   return (
     <PageWrap>
       <HeaderCard>
@@ -174,6 +195,40 @@ export default function InvitadosIndexPage() {
         </Box>
       </HeaderCard>
 
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 2 }}>
+        <TextField
+          size="small"
+          placeholder="Buscar por nombre, notas o acompañante..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          sx={{
+            width: { xs: "100%", sm: 340 },
+            "& .MuiOutlinedInput-root": { borderRadius: "10px", bgcolor: "#fff" },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 18, color: "#a0455e" }} />
+              </InputAdornment>
+            ),
+            endAdornment: busqueda ? (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setBusqueda("")}>
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
+          }}
+        />
+        {!loading && (
+          <Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>
+            {terminoBusqueda
+              ? `${invitadosFiltrados.length} de ${invitados.length} invitados`
+              : `${invitados.length} invitados`}
+          </Typography>
+        )}
+      </Box>
+
       <TableWrap elevation={0}>
         <THead>
           <THeadCell>Nombre</THeadCell>
@@ -189,8 +244,10 @@ export default function InvitadosIndexPage() {
           <Box sx={{ p: 4, textAlign: "center", color: "#a89a7d" }}>Cargando...</Box>
         ) : invitados.length === 0 ? (
           <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>Aún no has agregado invitados a la lista</Box>
+        ) : invitadosFiltrados.length === 0 ? (
+          <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>No hay invitados que coincidan con "{busqueda}"</Box>
         ) : (
-          invitados.map((inv) => (
+          invitadosFiltrados.map((inv) => (
             <TRow key={inv.id_invitado}>
               <TCell><Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#2c1a0e" }}>{inv.nombre}</Typography></TCell>
               <TCell><Chip size="small" label={inv.pases_asignados} sx={{ bgcolor: "rgba(204,107,142,0.12)", color: "#a0455e", fontWeight: 700 }} /></TCell>

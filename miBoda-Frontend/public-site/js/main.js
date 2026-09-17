@@ -606,13 +606,42 @@ function renderCalendario() {
     celdas += `<span class="mini-calendario-dia${esBoda}">${dia}</span>`;
   }
 
+  // En Android (y desktop) el link de Google Calendar abre directo la
+  // pantalla de "agregar evento", sin descargar ningún archivo. En iPhone
+  // no existe ese atajo (el invitado puede no tener Gmail), así que ahí se
+  // usa el .ics de toda la vida, pero SIN el atributo "download": así Safari
+  // lo abre como una vista previa de evento nativa en vez de descargarlo.
+  const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const enlaceCalendario = esIOS ? generarEnlaceICS() : generarEnlaceGoogleCalendar();
+  const atributoDescarga = esIOS ? "" : `target="_blank" rel="noopener"`;
+
   contenedor.innerHTML = `
     <p class="mini-calendario-mes">${nombresMes[mes]} ${anio}</p>
     <div class="mini-calendario-grid">${celdas}</div>
-    <a class="mini-calendario-agregar" href="${generarEnlaceICS()}" download="${CONFIG.novio}-y-${CONFIG.novia}.ics" aria-label="Agregar la boda a tu calendario">
+    <a class="mini-calendario-agregar" href="${enlaceCalendario}" ${atributoDescarga} aria-label="Agregar la boda a tu calendario">
       &#128197; Agrega a tu calendario
     </a>
   `;
+}
+
+function generarEnlaceGoogleCalendar() {
+  const inicio = new Date(CONFIG.fechaBodaISO);
+  const fin = new Date(inicio.getTime() + 6 * 60 * 60 * 1000); // 6 horas de duración por defecto
+
+  const formatoUTC = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+
+  const recepcion = CONFIG.ubicaciones.find(u => u.tipo.toLowerCase().includes("recepci"));
+  const lugar = recepcion ? `${recepcion.lugar}, ${recepcion.direccion}` : "";
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `Boda de ${CONFIG.novio} y ${CONFIG.novia}`,
+    dates: `${formatoUTC(inicio)}/${formatoUTC(fin)}`,
+    details: "¡Te esperamos para celebrar juntos!",
+    location: lugar,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 function generarEnlaceICS() {
