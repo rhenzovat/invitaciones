@@ -632,10 +632,9 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 
 .card-flower-left { left: -0.5rem; transform: scaleY(-1); }
 .card-flower-right { right: -0.5rem; transform: scale(-1, -1); }
-.card-icon { font-size: 1.8rem; margin-bottom: 0.75rem; display: flex; justify-content: center; }
-.card-icon img { width: 2.2rem; height: 2.2rem; object-fit: contain; }
-.card h3 { font-family: var(--font-script); font-size: 1.5rem; color: var(--color-terracota); margin-bottom: 0.4rem; }
-.card p { margin: 0.2rem 0; opacity: 0.85; }
+.card h3 { font-family: var(--font-script); font-size: 1.5rem; color: var(--color-terracota); margin-bottom: 0.6rem; }
+.card p { margin: 0.5rem 0; line-height: 1.5; opacity: 0.85; }
+.card-horario { color: var(--color-dorado); opacity: 1; font-weight: 600; }
 .card a.btn-link {
   display: inline-block;
   margin-top: 0.75rem;

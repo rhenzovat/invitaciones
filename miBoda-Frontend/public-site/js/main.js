@@ -269,10 +269,9 @@ function renderUbicaciones() {
     <div class="card">
       <img class="card-img" loading="lazy" src="${u.imagen}" alt="${u.tipo}">
       <div class="card-body">
-        ${u.icono ? `<div class="card-icon">${isIconImage(u.icono) ? `<img loading="lazy" src="${u.icono}" alt="">` : u.icono}</div>` : ""}
         <h3>${u.tipo}</h3>
         <p><strong>${u.lugar}</strong></p>
-        <p>${u.horario}</p>
+        <p class="card-horario">${u.horario}</p>
         <p>${u.direccion}</p>
         <a class="btn-link" href="${u.mapsUrl}" target="_blank" rel="noopener">Ver Mapa</a>
         <img class="card-flower card-flower-left" loading="lazy" src="${ASSET_BASE}assets/img/decor/flor-esquinas - cards.png" alt="" aria-hidden="true">
