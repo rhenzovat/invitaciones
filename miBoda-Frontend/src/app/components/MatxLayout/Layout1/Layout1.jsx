@@ -16,7 +16,6 @@ import { MenuFavoritosProvider } from "app/contexts/MenuFavoritosContext";
 import { CmsContentPushProvider } from "app/contexts/CmsContentPushContext";
 import useSettings from "app/hooks/useSettings";
 import { SecondarySidebar } from "app/components/SecondarySidebar";
-import CampusNotificacionHost from "app/components/CampusNotificacionHost";
 import SidenavTheme from "app/components/MatxTheme/SidenavTheme/SidenavTheme";
 import { sidenavCompactWidth, sideNavWidth } from "app/utils/constant";
 
@@ -154,7 +153,6 @@ const Layout1 = () => {
       </LayoutContainer>
 
       {/* {settings.secondarySidebar.show && <SecondarySidebar />} */}
-      <CampusNotificacionHost />
     </Layout1Root>
     </CmsContentPushProvider>
     </MenuFavoritosProvider>
