@@ -108,6 +108,7 @@ export default function InvitadosIndexPage() {
   const [panel, setPanel] = useState(false);
   const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "" });
   const [busqueda, setBusqueda] = useState("");
+  const [filtroFamilia, setFiltroFamilia] = useState("todos");
 
   const cargar = async () => {
     setLoading(true);
@@ -152,14 +153,26 @@ export default function InvitadosIndexPage() {
   const pct = capacidad ? Math.min(100, Math.round((pasesTotales / capacidad) * 100)) : 0;
   const sobrepasado = pasesTotales > capacidad;
 
+  const conteoFamilia = {
+    todos: invitados.length,
+    novio: invitados.filter((inv) => normalizar(inv.notas) === "novio").length,
+    novia: invitados.filter((inv) => normalizar(inv.notas) === "novia").length,
+  };
+
+  const invitadosPorFamilia = filtroFamilia === "todos"
+    ? invitados
+    : invitados.filter((inv) => normalizar(inv.notas) === filtroFamilia);
+
   const terminoBusqueda = normalizar(busqueda);
   const invitadosFiltrados = terminoBusqueda
-    ? invitados.filter((inv) =>
+    ? invitadosPorFamilia.filter((inv) =>
         normalizar(inv.nombre).includes(terminoBusqueda) ||
         normalizar(inv.notas).includes(terminoBusqueda) ||
         normalizar(inv.rsvp_acompanante).includes(terminoBusqueda),
       )
-    : invitados;
+    : invitadosPorFamilia;
+
+  const hayFiltrosActivos = terminoBusqueda || filtroFamilia !== "todos";
 
   return (
     <PageWrap>
@@ -195,7 +208,7 @@ export default function InvitadosIndexPage() {
         </Box>
       </HeaderCard>
 
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 1.5 }}>
         <TextField
           size="small"
           placeholder="Buscar por nombre, notas o acompañante..."
@@ -222,11 +235,32 @@ export default function InvitadosIndexPage() {
         />
         {!loading && (
           <Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>
-            {terminoBusqueda
+            {hayFiltrosActivos
               ? `${invitadosFiltrados.length} de ${invitados.length} invitados`
               : `${invitados.length} invitados`}
           </Typography>
         )}
+      </Box>
+
+      <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+        {[
+          { key: "todos", label: `Todos (${conteoFamilia.todos})` },
+          { key: "novio", label: `Familia del novio (${conteoFamilia.novio})` },
+          { key: "novia", label: `Familia de la novia (${conteoFamilia.novia})` },
+        ].map((op) => (
+          <Chip
+            key={op.key}
+            label={op.label}
+            onClick={() => setFiltroFamilia(op.key)}
+            sx={{
+              fontWeight: 700,
+              cursor: "pointer",
+              bgcolor: filtroFamilia === op.key ? "#a0455e" : "rgba(204,107,142,0.12)",
+              color: filtroFamilia === op.key ? "#fff" : "#a0455e",
+              "&:hover": { bgcolor: filtroFamilia === op.key ? "#8a3a4f" : "rgba(204,107,142,0.2)" },
+            }}
+          />
+        ))}
       </Box>
 
       <TableWrap elevation={0}>
@@ -245,7 +279,9 @@ export default function InvitadosIndexPage() {
         ) : invitados.length === 0 ? (
           <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>Aún no has agregado invitados a la lista</Box>
         ) : invitadosFiltrados.length === 0 ? (
-          <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>No hay invitados que coincidan con "{busqueda}"</Box>
+          <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>
+            {terminoBusqueda ? `No hay invitados que coincidan con "${busqueda}"` : "No hay invitados en este grupo"}
+          </Box>
         ) : (
           invitadosFiltrados.map((inv) => (
             <TRow key={inv.id_invitado}>
