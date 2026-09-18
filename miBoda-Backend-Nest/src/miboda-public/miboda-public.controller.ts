@@ -11,6 +11,7 @@ import {
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { Throttle } from "@nestjs/throttler";
 import { RsvpDto } from "./dto/rsvp.dto";
+import { VerificarInvitadoDto } from "./dto/verificar-invitado.dto";
 import { CancionDto } from "./dto/cancion.dto";
 import { MibodaPublicService } from "./miboda-public.service";
 
@@ -22,6 +23,12 @@ const MAX_FOTOS = 10;
 @Throttle({ default: { limit: 10, ttl: 60_000 } })
 export class MibodaPublicController {
   constructor(private readonly service: MibodaPublicService) {}
+
+  @Post("rsvp/verificar")
+  @HttpCode(HttpStatus.OK)
+  verificarInvitado(@Body() dto: VerificarInvitadoDto) {
+    return this.service.verificarInvitado(dto);
+  }
 
   @Post("rsvp")
   @HttpCode(HttpStatus.OK)

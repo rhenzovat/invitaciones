@@ -176,6 +176,7 @@ const ASSET_BASE = "";
 // de vuelta a Google Forms/Cloudinary como hasta ahora.
 const ENDPOINTS = {
   rsvp: "/api/miboda/rsvp",
+  rsvpVerificar: "/api/miboda/rsvp/verificar",
   cancion: "/api/miboda/cancion",
   galeria: "/api/miboda/galeria-foto",
 };
@@ -877,6 +878,14 @@ function iniciarRSVP() {
   const form = document.getElementById("rsvp-form");
   const thanks = document.getElementById("rsvp-thanks");
   const errorBox = document.getElementById("rsvp-error");
+  const acompananteWrap = document.getElementById("rsvp-acompanante-wrap");
+  const acompananteInput = document.getElementById("rsvp-acompanantes");
+  const submitBtn = document.getElementById("rsvp-submit-btn");
+
+  // true una vez que ya se verifico el nombre contra la lista de invitados y
+  // se confirmo que tiene mas de un pase (recien ahi se pidio acompañante).
+  // Mientras sea false, el submit del form solo "verifica" y no guarda nada.
+  let pasoConfirmado = false;
 
   const resetModal = () => {
     form.hidden = false;
@@ -884,6 +893,10 @@ function iniciarRSVP() {
     thanks.hidden = true;
     errorBox.hidden = true;
     errorBox.textContent = "";
+    acompananteWrap.hidden = true;
+    submitBtn.textContent = "Confirmar";
+    submitBtn.disabled = false;
+    pasoConfirmado = false;
   };
 
   const mostrarError = (mensaje) => {
@@ -902,25 +915,66 @@ function iniciarRSVP() {
     const nombre = document.getElementById("rsvp-nombre").value.trim();
     const apellidos = document.getElementById("rsvp-apellidos").value.trim();
     const nombreCompleto = `${nombre} ${apellidos}`.trim();
-    const acompanante = document.getElementById("rsvp-acompanantes").value;
+    const acompanante = pasoConfirmado ? acompananteInput.value : "";
     const confirma = form.querySelector('input[name="rsvp-confirma"]:checked').value;
 
-    if (ENDPOINTS && ENDPOINTS.rsvp) {
-      try {
-        await enviarAMiBodaBackend(ENDPOINTS.rsvp, { nombre, apellidos, acompanante, confirma });
-      } catch (err) {
-        mostrarError(err.message || "No se pudo enviar tu confirmación. Por favor intenta de nuevo.");
-        return;
-      }
-    } else {
-      // Respaldo local (solo en modo estático, sin backend propio).
-      const respuesta = { nombre: nombreCompleto, acompanante, confirma, fecha: new Date().toISOString() };
+    if (!ENDPOINTS || !ENDPOINTS.rsvp || !ENDPOINTS.rsvpVerificar) {
+      // Respaldo local (solo en modo estático, sin backend propio): sin lista
+      // de invitados que consultar, se guarda directo en un solo paso.
+      const respuesta = { nombre: nombreCompleto, acompanante: acompananteInput.value, confirma, fecha: new Date().toISOString() };
       const respuestas = JSON.parse(localStorage.getItem("rsvp-respuestas") || "[]");
       respuestas.push(respuesta);
       localStorage.setItem("rsvp-respuestas", JSON.stringify(respuestas));
-
-      // Si configuraste CONFIG.googleForm, esto envía la respuesta a tu Google Form.
       enviarAGoogleForm(respuesta);
+
+      form.hidden = true;
+      thanks.hidden = false;
+      setTimeout(() => { modal.hidden = true; }, 2200);
+      return;
+    }
+
+    if (!pasoConfirmado) {
+      // Paso 1: solo verifica contra la lista de invitados (no guarda nada
+      // todavia), para saber si corresponde pedir el nombre de un acompañante.
+      submitBtn.disabled = true;
+      let verificacion;
+      try {
+        const res = await enviarAMiBodaBackend(ENDPOINTS.rsvpVerificar, { nombre, apellidos });
+        verificacion = res.result;
+      } catch (err) {
+        mostrarError(err.message || "No se pudo verificar tu nombre. Intenta de nuevo.");
+        submitBtn.disabled = false;
+        return;
+      }
+      submitBtn.disabled = false;
+
+      if (!verificacion.encontrado) {
+        mostrarError("No encontramos tu nombre en la lista de invitados. Verifica que lo escribiste igual que en la invitación, o contáctanos por WhatsApp.");
+        return;
+      }
+      if (verificacion.yaConfirmo) {
+        mostrarError("Ya registramos tu confirmación anteriormente. Si necesitas corregir algo, contáctanos por WhatsApp.");
+        return;
+      }
+
+      if (verificacion.pasesAsignados > 1) {
+        // Tiene un pase extra: recien aqui se muestra el campo de acompañante
+        // y se espera a que vuelva a enviar el formulario para guardar.
+        acompananteWrap.hidden = false;
+        submitBtn.textContent = "Enviar Confirmación";
+        pasoConfirmado = true;
+        acompananteInput.focus();
+        return;
+      }
+      // Un solo pase: no hay a quien acompañar, se guarda de una vez.
+      pasoConfirmado = true;
+    }
+
+    try {
+      await enviarAMiBodaBackend(ENDPOINTS.rsvp, { nombre, apellidos, acompanante, confirma });
+    } catch (err) {
+      mostrarError(err.message || "No se pudo enviar tu confirmación. Por favor intenta de nuevo.");
+      return;
     }
 
     form.hidden = true;

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { RsvpDto } from "./dto/rsvp.dto";
+import { VerificarInvitadoDto } from "./dto/verificar-invitado.dto";
 import { CancionDto } from "./dto/cancion.dto";
 import { coincideConInvitado } from "./invitado-matcher.util";
 import { subirACloudinary } from "../common/cloudinary.util";
@@ -8,6 +9,33 @@ import { subirACloudinary } from "../common/cloudinary.util";
 @Injectable()
 export class MibodaPublicService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Paso previo al RSVP: busca al invitado por nombre/apellidos SIN guardar
+   * nada todavia, para que el formulario publico sepa si debe mostrar el
+   * campo de acompañante (solo si pases_asignados > 1) antes de confirmar.
+   */
+  async verificarInvitado(dto: VerificarInvitadoDto) {
+    const invitados = await this.prisma.webInvitado.findMany({ where: { Activo: "S" } });
+    const invitado = coincideConInvitado(invitados, dto.nombre, dto.apellidos);
+    if (!invitado) {
+      return { success: true, message: "Invitado no encontrado.", result: { encontrado: false } };
+    }
+
+    const yaRespondio = await this.prisma.webRsvpRespuesta.findFirst({
+      where: { id_invitado: invitado.id_invitado },
+    });
+
+    return {
+      success: true,
+      message: "Invitado encontrado.",
+      result: {
+        encontrado: true,
+        pasesAsignados: invitado.pases_asignados,
+        yaConfirmo: !!yaRespondio,
+      },
+    };
+  }
 
   async rsvp(dto: RsvpDto) {
     const nombreCompleto = `${dto.nombre} ${dto.apellidos}`.trim();

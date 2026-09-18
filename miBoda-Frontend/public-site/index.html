@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=47">
+<link rel="stylesheet" href="css/styles.css?v=48">
 </head>
 <body>
 
@@ -370,16 +370,18 @@
         <label for="rsvp-apellidos">Apellidos *</label>
         <input type="text" id="rsvp-apellidos" required>
 
-        <label for="rsvp-acompanantes">Nombre de acompañante (opcional)</label>
-        <input type="text" id="rsvp-acompanantes" placeholder="Si vienes solo(a), deja este campo vacío">
-
         <fieldset class="rsvp-radio">
           <legend>¿Asistirás?</legend>
           <label><input type="radio" name="rsvp-confirma" value="si" checked> Sí, ahí estaré</label>
           <label><input type="radio" name="rsvp-confirma" value="no"> No podré asistir</label>
         </fieldset>
 
-        <button type="submit" class="btn-primary">Enviar Confirmación</button>
+        <div id="rsvp-acompanante-wrap" hidden>
+          <label for="rsvp-acompanantes">Nombre de acompañante (opcional)</label>
+          <input type="text" id="rsvp-acompanantes" placeholder="Si vienes solo(a), deja este campo vacío">
+        </div>
+
+        <button type="submit" class="btn-primary" id="rsvp-submit-btn">Confirmar</button>
       </form>
       <p class="rsvp-thanks" id="rsvp-thanks" hidden>¡Gracias por confirmar! Te esperamos con mucha ilusión.</p>
       <p class="modal-note">Nota especial: Agradecemos tu puntualidad, para que no te pierdas ningún momento especial.</p>
@@ -389,6 +391,6 @@
 
 <audio id="bg-music" loop preload="none"></audio>
 
-<script src="js/main.js?v=41"></script>
+<script src="js/main.js?v=42"></script>
 </body>
 </html>

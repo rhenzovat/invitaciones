@@ -1016,6 +1016,7 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
   font-family: var(--font-serif);
 }
 .rsvp-radio { border: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+#rsvp-acompanante-wrap:not([hidden]) { display: flex; flex-direction: column; gap: 0.4rem; }
 .rsvp-radio legend { font-size: 0.85rem; opacity: 0.8; margin-bottom: 0.2rem; }
 .rsvp-thanks { text-align: center; color: var(--color-dorado); font-weight: 600; }
 .modal-note { font-size: 0.7rem; opacity: 0.6; margin-top: 1rem; }
