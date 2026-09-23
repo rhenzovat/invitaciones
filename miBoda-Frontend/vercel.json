@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://invitaciones-production-acfc.up.railway.app/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://miboda-backend.onrender.com/api/:path*" },
     { "source": "/admin/:path*", "destination": "/admin/index.html" }
   ]
 }
