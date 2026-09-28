@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { assetUrl } from "../common/storage.util";
+import { normalizar } from "../miboda-public/invitado-matcher.util";
 
 function looksLikeImagePath(v: string): boolean {
   return (
@@ -151,5 +152,41 @@ export class PublicConfigService {
       full: assetUrl(f.url_imagen),
       thumb: f.url_imagen_thumb ? assetUrl(f.url_imagen_thumb) : assetUrl(f.url_imagen),
     }));
+  }
+
+  /** Sugerencias de cancion agrupadas por nombre (insensible a mayusculas/acentos), ordenadas por mas pedidas. */
+  async canciones() {
+    const sugerencias = await this.prisma.webCancionSugerencia.findMany({
+      orderBy: { createdAt: "asc" },
+    });
+
+    const grupos = new Map<
+      string,
+      { cancion: string; genero: string | null; veces: number; ultima: Date; pedidoPor: string[] }
+    >();
+    for (const s of sugerencias) {
+      const clave = normalizar(s.nombre_cancion);
+      const nombre = s.nombre_invitado?.trim();
+      const existente = grupos.get(clave);
+      if (existente) {
+        existente.veces += 1;
+        existente.ultima = s.createdAt;
+        if (nombre && !existente.pedidoPor.some((n) => normalizar(n) === normalizar(nombre))) {
+          existente.pedidoPor.push(nombre);
+        }
+      } else {
+        grupos.set(clave, {
+          cancion: s.nombre_cancion,
+          genero: s.genero,
+          veces: 1,
+          ultima: s.createdAt,
+          pedidoPor: nombre ? [nombre] : [],
+        });
+      }
+    }
+
+    return Array.from(grupos.values()).sort(
+      (a, b) => b.veces - a.veces || b.ultima.getTime() - a.ultima.getTime(),
+    );
   }
 }

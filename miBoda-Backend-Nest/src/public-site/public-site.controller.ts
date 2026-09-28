@@ -14,4 +14,9 @@ export class PublicSiteController {
   async galeria() {
     return this.configService.galeria();
   }
+
+  @Get("dj/canciones")
+  async djCanciones() {
+    return this.configService.canciones();
+  }
 }
