@@ -3,7 +3,9 @@ import { PrismaService } from "../prisma/prisma.service";
 import { RsvpDto } from "./dto/rsvp.dto";
 import { VerificarInvitadoDto } from "./dto/verificar-invitado.dto";
 import { CancionDto } from "./dto/cancion.dto";
+import { MensajeDjDto } from "./dto/mensaje-dj.dto";
 import { coincideConInvitado } from "./invitado-matcher.util";
+import { contieneLenguajeInapropiado } from "./moderacion.util";
 import { subirACloudinary } from "../common/cloudinary.util";
 
 @Injectable()
@@ -85,6 +87,27 @@ export class MibodaPublicService {
     });
 
     return { success: true, message: "Sugerencia registrada correctamente." };
+  }
+
+  /**
+   * Mensajes/saludos publicos para que el DJ los lea en vivo. Moderacion
+   * automatica: si contiene lenguaje inapropiado se guarda igual (para
+   * tener registro) pero marcado como bloqueado, asi nunca aparece en la
+   * lista publica que ve el DJ. El invitado no se entera del bloqueo -
+   * simplemente recibe la misma confirmacion de siempre.
+   */
+  async mensajeDj(dto: MensajeDjDto) {
+    const bloqueado = contieneLenguajeInapropiado(dto.mensaje);
+
+    await this.prisma.webDjMensaje.create({
+      data: {
+        mensaje: dto.mensaje,
+        nombre_invitado: dto.de ?? null,
+        bloqueado,
+      },
+    });
+
+    return { success: true, message: "Mensaje enviado correctamente." };
   }
 
   async galeriaUpload(files: Express.Multer.File[]) {

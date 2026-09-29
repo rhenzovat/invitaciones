@@ -13,6 +13,7 @@ import { Throttle } from "@nestjs/throttler";
 import { RsvpDto } from "./dto/rsvp.dto";
 import { VerificarInvitadoDto } from "./dto/verificar-invitado.dto";
 import { CancionDto } from "./dto/cancion.dto";
+import { MensajeDjDto } from "./dto/mensaje-dj.dto";
 import { MibodaPublicService } from "./miboda-public.service";
 
 const IMAGE_MIME = /^image\/(jpeg|jpg|png|webp|heic|heif)$/;
@@ -40,6 +41,12 @@ export class MibodaPublicController {
   @HttpCode(HttpStatus.OK)
   cancion(@Body() dto: CancionDto) {
     return this.service.cancion(dto);
+  }
+
+  @Post("mensaje-dj")
+  @HttpCode(HttpStatus.OK)
+  mensajeDj(@Body() dto: MensajeDjDto) {
+    return this.service.mensajeDj(dto);
   }
 
   @Post("galeria-foto")
