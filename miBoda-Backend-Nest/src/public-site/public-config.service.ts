@@ -189,4 +189,18 @@ export class PublicConfigService {
       (a, b) => b.veces - a.veces || b.ultima.getTime() - a.ultima.getTime(),
     );
   }
+
+  /** Mensajes/saludos para el DJ, mas recientes primero. Los bloqueados por moderacion no se listan. */
+  async mensajesDj() {
+    const mensajes = await this.prisma.webDjMensaje.findMany({
+      where: { bloqueado: false },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    return mensajes.map((m) => ({
+      mensaje: m.mensaje,
+      de: m.nombre_invitado,
+      fecha: m.createdAt,
+    }));
+  }
 }

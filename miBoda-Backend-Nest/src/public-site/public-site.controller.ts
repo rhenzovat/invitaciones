@@ -19,4 +19,9 @@ export class PublicSiteController {
   async djCanciones() {
     return this.configService.canciones();
   }
+
+  @Get("dj/mensajes")
+  async djMensajes() {
+    return this.configService.mensajesDj();
+  }
 }

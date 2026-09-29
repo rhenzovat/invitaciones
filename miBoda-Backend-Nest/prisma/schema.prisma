@@ -197,6 +197,16 @@ model WebCancionSugerencia {
   @@map("web_cancion_sugerencias")
 }
 
+model WebDjMensaje {
+  id_mensaje      Int      @id @default(autoincrement())
+  mensaje         String   @db.VarChar(300)
+  nombre_invitado String?  @db.VarChar(200)
+  bloqueado       Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("web_dj_mensajes")
+}
+
 model WebGaleriaFoto {
   id_foto              Int      @id @default(autoincrement())
   url_imagen           String   @db.VarChar(500)
