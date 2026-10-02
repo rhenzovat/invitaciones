@@ -178,6 +178,7 @@ const ENDPOINTS = {
   rsvp: "/api/miboda/rsvp",
   rsvpVerificar: "/api/miboda/rsvp/verificar",
   cancion: "/api/miboda/cancion",
+  mensajeDj: "/api/miboda/mensaje-dj",
   galeria: "/api/miboda/galeria-foto",
 };
 
@@ -1070,6 +1071,56 @@ function iniciarCancion() {
   });
 }
 
+/* =========================================================
+   MENSAJE PARA EL DJ
+   ========================================================= */
+function iniciarMensajeDj() {
+  const form = document.getElementById("mensaje-dj-form");
+  const thanks = document.getElementById("mensaje-dj-thanks");
+  const texto = document.getElementById("mensaje-dj-texto");
+  const nombre = document.getElementById("mensaje-dj-nombre");
+  const contador = document.getElementById("mensaje-dj-contador");
+  const boton = document.getElementById("mensaje-dj-boton");
+  if (!form || !thanks || !texto) return;
+
+  texto.addEventListener("input", () => {
+    contador.textContent = `${texto.value.length} / ${texto.maxLength}`;
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const mensaje = texto.value.trim();
+    if (!mensaje) {
+      texto.focus();
+      return;
+    }
+    const de = nombre.value.trim();
+    const datos = de ? { mensaje, de } : { mensaje };
+
+    boton.disabled = true;
+    try {
+      await enviarAMiBodaBackend(ENDPOINTS.mensajeDj, datos);
+    } catch (err) {
+      alert("No se pudo enviar tu mensaje. Por favor intenta de nuevo.");
+      boton.disabled = false;
+      return;
+    }
+
+    boton.disabled = false;
+    form.reset();
+    contador.textContent = `0 / ${texto.maxLength}`;
+    form.hidden = true;
+    thanks.hidden = false;
+  });
+
+  document.getElementById("mensaje-dj-otro")?.addEventListener("click", () => {
+    thanks.hidden = true;
+    form.hidden = false;
+    texto.focus();
+  });
+}
+
 function enviarCancionAGoogleForm(sugerencia) {
   const gf = CONFIG.googleFormCancion;
   if (!gf || !gf.formId) return; // no configurado todavía: se omite en silencio
@@ -1326,6 +1377,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   iniciarBotonMusica();
   iniciarRSVP();
   iniciarCancion();
+  iniciarMensajeDj();
   iniciarGaleria();
   iniciarVideo();
   iniciarMenuFlotante();

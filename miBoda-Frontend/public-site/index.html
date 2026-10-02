@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=48">
+<link rel="stylesheet" href="css/styles.css?v=49">
 </head>
 <body>
 
@@ -286,6 +286,23 @@
       <button type="submit" class="btn-primary" id="cancion-boton">Sugerir Canción</button>
     </form>
     <p class="cancion-thanks" id="cancion-thanks" hidden>¡Gracias por tu sugerencia!</p>
+
+    <h3 class="mensaje-dj-titulo">Un mensaje para el DJ</h3>
+    <p class="section-sub">¿Quieres dedicar una canción o mandar un saludo a los novios? Escríbelo aquí y el DJ lo leerá.</p>
+    <form id="mensaje-dj-form" class="cancion-form">
+      <label for="mensaje-dj-texto">Tu mensaje *</label>
+      <textarea id="mensaje-dj-texto" maxlength="300" rows="3" placeholder="Ej: ¡Dedicado a los novios! Que viva el amor" required></textarea>
+      <small class="mensaje-dj-contador" id="mensaje-dj-contador">0 / 300</small>
+
+      <label for="mensaje-dj-nombre">Tu nombre (opcional)</label>
+      <input type="text" id="mensaje-dj-nombre" placeholder="Tu nombre" maxlength="200">
+
+      <button type="submit" class="btn-primary" id="mensaje-dj-boton">Enviar mensaje</button>
+    </form>
+    <div class="cancion-thanks" id="mensaje-dj-thanks" hidden>
+      <p>¡Gracias! El DJ lo recibirá.</p>
+      <button type="button" class="mensaje-dj-otro" id="mensaje-dj-otro">Enviar otro mensaje</button>
+    </div>
   </section>
 
   <!-- ESTACIONAMIENTO -->
@@ -391,6 +408,6 @@
 
 <audio id="bg-music" loop preload="none"></audio>
 
-<script src="js/main.js?v=42"></script>
+<script src="js/main.js?v=43"></script>
 </body>
 </html>

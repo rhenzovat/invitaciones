@@ -102,7 +102,7 @@ export class MibodaPublicService {
     await this.prisma.webDjMensaje.create({
       data: {
         mensaje: dto.mensaje,
-        nombre_invitado: dto.de ?? null,
+        nombre_invitado: dto.de || null,
         bloqueado,
       },
     });
