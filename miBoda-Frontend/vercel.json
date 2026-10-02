@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/api/:path*", "destination": "https://miboda-backend.onrender.com/api/:path*" },
-    { "source": "/admin/:path*", "destination": "/admin/index.html" }
+    { "source": "/admin/:path*", "destination": "/admin/index.html" },
+    { "source": "/dj", "destination": "/dj.html" },
+    { "source": "/dj/", "destination": "/dj.html" }
   ]
 }
