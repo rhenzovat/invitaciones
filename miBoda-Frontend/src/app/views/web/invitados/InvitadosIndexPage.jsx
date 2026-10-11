@@ -4,6 +4,7 @@ import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import PhoneIcon from "@mui/icons-material/Phone";
+import DownloadIcon from "@mui/icons-material/FileDownload";
 import AddIcon from "@mui/icons-material/Add";
 import GroupsIcon from "@mui/icons-material/Groups";
 import SearchIcon from "@mui/icons-material/Search";
@@ -13,6 +14,7 @@ import { listar, crear, actualizar, eliminar } from "../../../api/web_invitados.
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
 import { EditPanel } from "../evento/EventoCanvasChrome";
 import { darkTf } from "../evento/EventoEditors";
+import { exportarInvitadosExcel } from "./exportarInvitadosExcel";
 
 const PageWrap = styled(Box)(() => ({
   padding: "24px",
@@ -117,6 +119,7 @@ export default function InvitadosIndexPage() {
   const [pasesTotales, setPasesTotales] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const [panel, setPanel] = useState(false);
   const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "", celular: "" });
   const [busqueda, setBusqueda] = useState("");
@@ -162,6 +165,17 @@ export default function InvitadosIndexPage() {
       cargar();
     } catch (e) { handleErrorMessages("Error", e); }
     finally { setSaving(false); }
+  };
+
+  const descargarExcel = async () => {
+    setExportando(true);
+    try {
+      await exportarInvitadosExcel({ invitados, capacidad, pasesTotales });
+    } catch (e) {
+      handleErrorMessages("Error", { message: "No se pudo generar el Excel. Intenta de nuevo." });
+    } finally {
+      setExportando(false);
+    }
   };
 
   const handleEliminar = async (inv) => {
@@ -236,6 +250,17 @@ export default function InvitadosIndexPage() {
                 "& .MuiLinearProgress-bar": { bgcolor: sobrepasado ? "#ef4444" : "#22c55e", borderRadius: 4 } }}
             />
           </Box>
+          <Button
+            variant="outlined" startIcon={<DownloadIcon />} onClick={descargarExcel}
+            disabled={loading || exportando || invitados.length === 0}
+            sx={{
+              color: "#fdf8f5", borderColor: "rgba(255,255,255,0.4)", textTransform: "none", fontWeight: 700, borderRadius: "10px", whiteSpace: "nowrap",
+              "&:hover": { borderColor: "#fff", bgcolor: "rgba(255,255,255,0.08)" },
+              "&.Mui-disabled": { color: "rgba(255,255,255,0.35)", borderColor: "rgba(255,255,255,0.15)" },
+            }}
+          >
+            {exportando ? "Generando..." : "Descargar Excel"}
+          </Button>
           <Button
             variant="contained" startIcon={<AddIcon />} onClick={abrirNuevo}
             sx={{ background: "linear-gradient(135deg,#22c55e,#16a34a)", textTransform: "none", fontWeight: 700, borderRadius: "10px", whiteSpace: "nowrap" }}
