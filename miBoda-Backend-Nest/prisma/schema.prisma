@@ -163,6 +163,7 @@ model WebInvitado {
   nombre           String   @db.VarChar(200)
   pases_asignados  Int      @default(1)
   notas            String?  @db.Text
+  celular          String?  @db.VarChar(30)
   Activo           String   @default("S") @db.VarChar(1)
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")

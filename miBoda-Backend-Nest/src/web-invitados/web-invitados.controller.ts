@@ -12,6 +12,7 @@ import {
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { PrismaService } from "../prisma/prisma.service";
 import { ActualizarInvitadoDto, CrearInvitadoDto, EliminarInvitadoDto } from "./dto/invitado.dto";
+import { resolverConfirmacion } from "./confirmacion.util";
 
 @Controller("web_invitados")
 @UseGuards(JwtAuthGuard)
@@ -59,7 +60,12 @@ export class WebInvitadosController {
   @HttpCode(HttpStatus.OK)
   async crear(@Body() dto: CrearInvitadoDto) {
     const invitado = await this.prisma.webInvitado.create({
-      data: { nombre: dto.nombre, pases_asignados: dto.pases_asignados, notas: dto.notas ?? null },
+      data: {
+        nombre: dto.nombre,
+        pases_asignados: dto.pases_asignados,
+        notas: dto.notas ?? null,
+        celular: dto.celular || null,
+      },
     });
     return { success: true, message: "Invitado agregado correctamente.", result: invitado };
   }
@@ -70,9 +76,38 @@ export class WebInvitadosController {
     const existe = await this.prisma.webInvitado.findUnique({ where: { id_invitado: dto.id_invitado } });
     if (!existe) throw new NotFoundException("El invitado no existe.");
 
-    const invitado = await this.prisma.webInvitado.update({
-      where: { id_invitado: dto.id_invitado },
-      data: { nombre: dto.nombre, pases_asignados: dto.pases_asignados, notas: dto.notas ?? null },
+    const invitado = await this.prisma.$transaction(async (tx) => {
+      const actualizado = await tx.webInvitado.update({
+        where: { id_invitado: dto.id_invitado },
+        data: {
+          nombre: dto.nombre,
+          pases_asignados: dto.pases_asignados,
+          notas: dto.notas ?? null,
+          // Solo se toca si viene en la peticion: un panel con la version vieja en cache no debe borrar los celulares.
+          ...(dto.celular !== undefined ? { celular: dto.celular || null } : {}),
+        },
+      });
+
+      // Confirmacion manual (el admin confirmo por llamada): solo si el panel la envia.
+      if (dto.rsvp_estado) {
+        const confirmacion = resolverConfirmacion(dto.rsvp_estado, actualizado.pases_asignados, dto.rsvp_acompanante);
+        const actual = await tx.webRsvpRespuesta.findFirst({ where: { id_invitado: actualizado.id_invitado } });
+
+        if (!confirmacion) {
+          if (actual) await tx.webRsvpRespuesta.deleteMany({ where: { id_invitado: actualizado.id_invitado } });
+        } else if (actual) {
+          await tx.webRsvpRespuesta.update({
+            where: { id_rsvp_respuesta: actual.id_rsvp_respuesta },
+            data: confirmacion,
+          });
+        } else {
+          await tx.webRsvpRespuesta.create({
+            data: { ...confirmacion, nombre: actualizado.nombre, id_invitado: actualizado.id_invitado },
+          });
+        }
+      }
+
+      return actualizado;
     });
     return { success: true, message: "Invitado actualizado correctamente.", result: invitado };
   }

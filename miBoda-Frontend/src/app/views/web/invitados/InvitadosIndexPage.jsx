@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Paper, Chip, IconButton, Tooltip, TextField, Button, LinearProgress, InputAdornment } from "@mui/material";
+import { Box, Typography, Paper, Chip, IconButton, Tooltip, TextField, Button, LinearProgress, InputAdornment, MenuItem } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import PhoneIcon from "@mui/icons-material/Phone";
 import AddIcon from "@mui/icons-material/Add";
 import GroupsIcon from "@mui/icons-material/Groups";
 import SearchIcon from "@mui/icons-material/Search";
@@ -34,12 +35,13 @@ const HeaderCard = styled(Box)(() => ({
 
 const TableWrap = styled(Paper)(() => ({
   borderRadius: "16px",
-  overflow: "hidden",
+  overflowX: "auto",
+  overflowY: "hidden",
   border: "1px solid rgba(204,107,142,0.15)",
   boxShadow: "0 4px 24px rgba(44,26,14,0.08)",
 }));
 
-const GRID_COLS = "1.3fr 70px 105px 1fr 120px 1fr 80px";
+const GRID_COLS = "1.3fr 140px 70px 105px 1fr 120px 1fr 80px";
 
 function normalizar(s) {
   return (s || "")
@@ -49,6 +51,16 @@ function normalizar(s) {
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
 }
+
+function soloDigitos(s) {
+  return (s || "").toString().replace(/\D/g, "");
+}
+
+const ESTADOS_RSVP_OPCIONES = [
+  { value: "pendiente", label: "Pendiente (sin respuesta)" },
+  { value: "confirmado", label: "Confirmó asistencia" },
+  { value: "no_asiste", label: "No asistirá" },
+];
 
 function formatearFechaRsvp(iso) {
   if (!iso) return "—";
@@ -106,9 +118,10 @@ export default function InvitadosIndexPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [panel, setPanel] = useState(false);
-  const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "" });
+  const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "", celular: "" });
   const [busqueda, setBusqueda] = useState("");
   const [filtroFamilia, setFiltroFamilia] = useState("todos");
+  const [filtroEstado, setFiltroEstado] = useState("todos");
 
   const cargar = async () => {
     setLoading(true);
@@ -123,8 +136,19 @@ export default function InvitadosIndexPage() {
 
   useEffect(() => { cargar(); }, []);
 
-  const abrirNuevo = () => { setForm({ nombre: "", pases_asignados: 1, notas: "" }); setPanel(true); };
-  const abrirEditar = (inv) => { setForm({ id_invitado: inv.id_invitado, nombre: inv.nombre, pases_asignados: inv.pases_asignados, notas: inv.notas || "" }); setPanel(true); };
+  const abrirNuevo = () => { setForm({ nombre: "", pases_asignados: 1, notas: "", celular: "" }); setPanel(true); };
+  const abrirEditar = (inv) => {
+    setForm({
+      id_invitado: inv.id_invitado,
+      nombre: inv.nombre,
+      pases_asignados: inv.pases_asignados,
+      notas: inv.notas || "",
+      celular: inv.celular || "",
+      rsvp_estado: inv.rsvp_estado || "pendiente",
+      rsvp_acompanante: inv.rsvp_acompanante || "",
+    });
+    setPanel(true);
+  };
   const set = (f, v) => setForm((p) => ({ ...p, [f]: v }));
 
   const guardar = async () => {
@@ -163,16 +187,29 @@ export default function InvitadosIndexPage() {
     ? invitados
     : invitados.filter((inv) => normalizar(inv.notas) === filtroFamilia);
 
+  const conteoEstado = {
+    todos: invitadosPorFamilia.length,
+    pendiente: invitadosPorFamilia.filter((inv) => inv.rsvp_estado === "pendiente").length,
+    confirmado: invitadosPorFamilia.filter((inv) => inv.rsvp_estado === "confirmado").length,
+    no_asiste: invitadosPorFamilia.filter((inv) => inv.rsvp_estado === "no_asiste").length,
+  };
+
+  const invitadosPorEstado = filtroEstado === "todos"
+    ? invitadosPorFamilia
+    : invitadosPorFamilia.filter((inv) => inv.rsvp_estado === filtroEstado);
+
   const terminoBusqueda = normalizar(busqueda);
+  const digitosBusqueda = soloDigitos(busqueda);
   const invitadosFiltrados = terminoBusqueda
-    ? invitadosPorFamilia.filter((inv) =>
+    ? invitadosPorEstado.filter((inv) =>
         normalizar(inv.nombre).includes(terminoBusqueda) ||
         normalizar(inv.notas).includes(terminoBusqueda) ||
-        normalizar(inv.rsvp_acompanante).includes(terminoBusqueda),
+        normalizar(inv.rsvp_acompanante).includes(terminoBusqueda) ||
+        (digitosBusqueda.length >= 3 && soloDigitos(inv.celular).includes(digitosBusqueda)),
       )
-    : invitadosPorFamilia;
+    : invitadosPorEstado;
 
-  const hayFiltrosActivos = terminoBusqueda || filtroFamilia !== "todos";
+  const hayFiltrosActivos = terminoBusqueda || filtroFamilia !== "todos" || filtroEstado !== "todos";
 
   return (
     <PageWrap>
@@ -184,7 +221,7 @@ export default function InvitadosIndexPage() {
           <Box>
             <Typography sx={{ fontWeight: 800, fontSize: "1rem", color: "#fdf8f5", lineHeight: 1.1 }}>Lista de Invitados</Typography>
             <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.45)", mt: 0.3 }}>
-              Planificación de a quién invitar y cuántos pases tiene cada uno — no afecta el RSVP público
+              Invitados, pases y confirmaciones — también puedes confirmar a mano a quien responda por llamada
             </Typography>
           </Box>
         </Box>
@@ -211,7 +248,7 @@ export default function InvitadosIndexPage() {
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 1.5 }}>
         <TextField
           size="small"
-          placeholder="Buscar por nombre, notas o acompañante..."
+          placeholder="Buscar por nombre, celular, notas o acompañante..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           sx={{
@@ -242,7 +279,7 @@ export default function InvitadosIndexPage() {
         )}
       </Box>
 
-      <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+      <Box sx={{ display: "flex", gap: 1, mb: 1, flexWrap: "wrap" }}>
         {[
           { key: "todos", label: `Todos (${conteoFamilia.todos})` },
           { key: "novio", label: `Familia del novio (${conteoFamilia.novio})` },
@@ -263,9 +300,33 @@ export default function InvitadosIndexPage() {
         ))}
       </Box>
 
+      <Box sx={{ display: "flex", gap: 1, mb: 2, flexWrap: "wrap" }}>
+        {[
+          { key: "todos", label: `Cualquier estado (${conteoEstado.todos})` },
+          { key: "pendiente", label: `Sin confirmar (${conteoEstado.pendiente})` },
+          { key: "confirmado", label: `Confirmaron (${conteoEstado.confirmado})` },
+          { key: "no_asiste", label: `No asisten (${conteoEstado.no_asiste})` },
+        ].map((op) => (
+          <Chip
+            key={op.key}
+            label={op.label}
+            onClick={() => setFiltroEstado(op.key)}
+            sx={{
+              fontWeight: 700,
+              cursor: "pointer",
+              bgcolor: filtroEstado === op.key ? "#2c1a0e" : "rgba(44,26,14,0.07)",
+              color: filtroEstado === op.key ? "#fff" : "#4a2a15",
+              "&:hover": { bgcolor: filtroEstado === op.key ? "#4a2a15" : "rgba(44,26,14,0.14)" },
+            }}
+          />
+        ))}
+      </Box>
+
       <TableWrap elevation={0}>
+        <Box sx={{ minWidth: 1120 }}>
         <THead>
           <THeadCell>Nombre</THeadCell>
+          <THeadCell>Celular</THeadCell>
           <THeadCell>Pases</THeadCell>
           <THeadCell>Fecha confirmó</THeadCell>
           <THeadCell>Acompañante</THeadCell>
@@ -280,12 +341,26 @@ export default function InvitadosIndexPage() {
           <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>Aún no has agregado invitados a la lista</Box>
         ) : invitadosFiltrados.length === 0 ? (
           <Box sx={{ py: 6, textAlign: "center", color: "#b8a090" }}>
-            {terminoBusqueda ? `No hay invitados que coincidan con "${busqueda}"` : "No hay invitados en este grupo"}
+            {terminoBusqueda ? `No hay invitados que coincidan con "${busqueda}"` : "No hay invitados con estos filtros"}
           </Box>
         ) : (
           invitadosFiltrados.map((inv) => (
             <TRow key={inv.id_invitado}>
               <TCell><Typography sx={{ fontSize: "0.85rem", fontWeight: 700, color: "#2c1a0e" }}>{inv.nombre}</Typography></TCell>
+              <TCell>
+                {inv.celular ? (
+                  <Box
+                    component="a"
+                    href={`tel:${inv.celular.replace(/[^\d+]/g, "")}`}
+                    sx={{ display: "inline-flex", alignItems: "center", gap: 0.6, fontSize: "0.8rem", fontWeight: 600, color: "#16a34a", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+                  >
+                    <PhoneIcon sx={{ fontSize: 14 }} />
+                    {inv.celular}
+                  </Box>
+                ) : (
+                  <Typography sx={{ fontSize: "0.78rem", color: "#b8a090" }}>—</Typography>
+                )}
+              </TCell>
               <TCell><Chip size="small" label={inv.pases_asignados} sx={{ bgcolor: "rgba(204,107,142,0.12)", color: "#a0455e", fontWeight: 700 }} /></TCell>
               <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{formatearFechaRsvp(inv.rsvp_fecha)}</Typography></TCell>
               <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{inv.rsvp_acompanante || "—"}</Typography></TCell>
@@ -307,12 +382,36 @@ export default function InvitadosIndexPage() {
             </TRow>
           ))
         )}
+        </Box>
       </TableWrap>
 
       {panel && (
         <EditPanel open title={form.id_invitado ? "Editar invitado" : "Agregar invitado"} onClose={() => setPanel(false)} onSave={guardar} saving={saving}>
           <TextField {...darkTf} label="Nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
+          <TextField {...darkTf} type="tel" label="Celular (opcional)" placeholder="Ej: 987 654 321" inputProps={{ maxLength: 30 }} value={form.celular} onChange={(e) => set("celular", e.target.value)} />
           <TextField {...darkTf} type="number" label="Pases asignados" inputProps={{ min: 1, max: 50 }} value={form.pases_asignados} onChange={(e) => set("pases_asignados", parseInt(e.target.value || "1", 10))} />
+          {form.id_invitado && (
+            <>
+              <TextField
+                {...darkTf}
+                select
+                label="Confirmación de asistencia"
+                helperText="Si confirmó por llamada, elige aquí su respuesta. Ya no podrá volver a confirmar desde la invitación."
+                FormHelperTextProps={{ sx: { color: "rgba(255,255,255,0.45)" } }}
+                SelectProps={{ MenuProps: { sx: { zIndex: 2000 } } }}
+                sx={{ ...darkTf.sx, "& .MuiSelect-icon": { color: "rgba(255,255,255,0.55)" } }}
+                value={form.rsvp_estado || "pendiente"}
+                onChange={(e) => set("rsvp_estado", e.target.value)}
+              >
+                {ESTADOS_RSVP_OPCIONES.map((op) => (
+                  <MenuItem key={op.value} value={op.value}>{op.label}</MenuItem>
+                ))}
+              </TextField>
+              {form.rsvp_estado === "confirmado" && Number(form.pases_asignados) > 1 && (
+                <TextField {...darkTf} label="Acompañante" placeholder="Nombre del acompañante" inputProps={{ maxLength: 200 }} value={form.rsvp_acompanante || ""} onChange={(e) => set("rsvp_acompanante", e.target.value)} />
+              )}
+            </>
+          )}
           <TextField {...darkTf} label="Notas (opcional)" multiline minRows={2} value={form.notas} onChange={(e) => set("notas", e.target.value)} />
         </EditPanel>
       )}
