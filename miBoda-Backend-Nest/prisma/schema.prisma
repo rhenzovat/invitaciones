@@ -169,6 +169,7 @@ model WebInvitado {
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
 
   respuestas WebRsvpRespuesta[]
+  asignacionMesa WebMesaAsignacion?
 
   @@map("web_invitados")
 }
@@ -219,4 +220,40 @@ model WebGaleriaFoto {
   updatedAt            DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("web_galeria_fotos")
+}
+
+model WebMesa {
+  id_mesa   Int      @id @default(autoincrement())
+  nombre    String   @db.VarChar(100)
+  capacidad Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  asignaciones WebMesaAsignacion[]
+
+  @@map("web_mesas")
+}
+
+model WebMesaAsignacion {
+  id_asignacion Int      @id @default(autoincrement())
+  id_invitado   Int      @unique
+  id_mesa       Int
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  invitado WebInvitado @relation(fields: [id_invitado], references: [id_invitado], onDelete: Cascade)
+  mesa     WebMesa     @relation(fields: [id_mesa], references: [id_mesa], onDelete: Cascade)
+
+  @@map("web_mesa_asignaciones")
+}
+
+model WebMesaRegla {
+  id_regla  Int      @id @default(autoincrement())
+  tipo      String   @db.VarChar(20)
+  severidad String   @db.VarChar(4)
+  peso      Int?
+  sujetos   Json
+  id_mesa   Int?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("web_mesa_reglas")
 }

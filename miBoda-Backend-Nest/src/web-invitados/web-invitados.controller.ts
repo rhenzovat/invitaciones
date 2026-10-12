@@ -21,13 +21,18 @@ export class WebInvitadosController {
 
   @Get("listar")
   async listar() {
-    const [invitados, evento, respuestas] = await Promise.all([
-      this.prisma.webInvitado.findMany({ where: { Activo: "S" }, orderBy: { nombre: "asc" } }),
+    const [invitados, evento, respuestas, mesas] = await Promise.all([
+      this.prisma.webInvitado.findMany({
+        where: { Activo: "S" },
+        orderBy: { nombre: "asc" },
+        include: { asignacionMesa: { include: { mesa: true } } },
+      }),
       this.prisma.webEvento.findFirst({ where: { Activo: "S" } }),
       this.prisma.webRsvpRespuesta.findMany({
         where: { id_invitado: { not: null } },
         select: { id_invitado: true, asistira: true, acompanante: true, createdAt: true },
       }),
+      this.prisma.webMesa.findMany({ orderBy: { id_mesa: "asc" } }),
     ]);
 
     const respuestaPorInvitado = new Map(respuestas.map((r) => [r.id_invitado, r]));
@@ -35,8 +40,13 @@ export class WebInvitadosController {
     const invitadosConEstado = invitados.map((inv) => {
       const respuesta = respuestaPorInvitado.get(inv.id_invitado);
       const rsvp_estado = !respuesta ? "pendiente" : respuesta.asistira === "S" ? "confirmado" : "no_asiste";
+      const { asignacionMesa, ...datosInvitado } = inv;
+      // La mesa solo cuenta mientras la persona siga confirmada.
+      const mesa = rsvp_estado === "confirmado" ? asignacionMesa?.mesa : undefined;
       return {
-        ...inv,
+        ...datosInvitado,
+        mesa_id: mesa?.id_mesa ?? null,
+        mesa_nombre: mesa?.nombre ?? null,
         rsvp_estado,
         rsvp_acompanante: respuesta?.acompanante ?? null,
         rsvp_fecha: respuesta?.createdAt ?? null,
@@ -50,6 +60,7 @@ export class WebInvitadosController {
       message: "Listar registros",
       result: {
         invitados: invitadosConEstado,
+        mesas: mesas.map((m) => ({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })),
         capacidad_maxima: evento?.capacidad_maxima ?? 100,
         pases_totales: pasesTotales,
       },

@@ -16,6 +16,7 @@ import { WebInvitadosModule } from "./web-invitados/web-invitados.module";
 import { MibodaPublicModule } from "./miboda-public/miboda-public.module";
 import { PublicSiteModule } from "./public-site/public-site.module";
 import { HealthModule } from "./health/health.module";
+import { WebMesasModule } from "./web-mesas/web-mesas.module";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { HealthModule } from "./health/health.module";
     MibodaPublicModule,
     PublicSiteModule,
     HealthModule,
+    WebMesasModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

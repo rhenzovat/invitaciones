@@ -61,7 +61,7 @@ function aplicarEncabezado(fila) {
 }
 
 /** Arma el libro de Excel. Recibe el constructor Workbook de exceljs para poder probarlo sin el navegador. */
-export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, fecha = new Date() }) {
+export function construirLibro(Workbook, { invitados, mesas = [], capacidad, pasesTotales, fecha = new Date() }) {
   const libro = new Workbook();
   libro.creator = "Renzo & Yakelin";
   libro.created = fecha;
@@ -94,6 +94,13 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
     ["No asisten", resumen.noAsisten],
     ["Sin confirmar (invitados)", resumen.sinConfirmar],
     ["   Pases de quienes aún no confirman", resumen.pasesSinConfirmar],
+    ...(mesas.length > 0
+      ? [
+          null,
+          ["Mesas creadas", mesas.length],
+          ["Confirmados sin mesa", invitados.filter((i) => estadoDe(i) === "confirmado" && !i.mesa_nombre).length],
+        ]
+      : []),
   ];
   let fila = 4;
   for (const datos of filas) {
@@ -109,8 +116,9 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
     }
     fila += 1;
   }
-  hojaResumen.getCell("A16").value = "El detalle por invitado, con filtros, está en la hoja «Invitados».";
-  hojaResumen.getCell("A16").font = { italic: true, color: { argb: "FF6B7280" } };
+  const celdaNota = hojaResumen.getCell(`A${fila + 1}`);
+  celdaNota.value = "El detalle por invitado, con filtros, está en la hoja «Invitados»" + (mesas.length > 0 ? " y la distribución en «Mesas»." : ".");
+  celdaNota.font = { italic: true, color: { argb: "FF6B7280" } };
 
   // ── Hoja 2: Invitados ────────────────────────────────────────────────────
   const hoja = libro.addWorksheet("Invitados", { views: [{ state: "frozen", ySplit: 1 }] });
@@ -122,6 +130,7 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
     { header: "Pases", key: "pases", width: 8 },
     { header: "Estado", key: "estado", width: 14 },
     { header: "Acompañante", key: "acompanante", width: 28 },
+    { header: "Mesa", key: "mesa", width: 14 },
     { header: "Fecha de confirmación", key: "fecha", width: 16 },
     { header: "Notas", key: "notas", width: 30 },
   ];
@@ -138,6 +147,7 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
       pases: Number(inv.pases_asignados) || 0,
       estado: estado.texto,
       acompanante: (inv.rsvp_acompanante || "").trim(),
+      mesa: inv.mesa_nombre || "",
       fecha: fechaRsvp && !Number.isNaN(fechaRsvp.getTime()) ? fechaRsvp : "",
       notas: inv.notas || "",
     });
@@ -146,6 +156,7 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
     f.getCell("n").alignment = { vertical: "middle", horizontal: "center" };
     f.getCell("pases").alignment = { vertical: "middle", horizontal: "center" };
     f.getCell("familia").alignment = { vertical: "middle", horizontal: "center" };
+    f.getCell("mesa").alignment = { vertical: "middle", horizontal: "center" };
     f.getCell("fecha").alignment = { vertical: "middle", horizontal: "center" };
     f.getCell("fecha").numFmt = "dd/mm/yyyy";
     f.getCell("celular").numFmt = "@";
@@ -155,8 +166,41 @@ export function construirLibro(Workbook, { invitados, capacidad, pasesTotales, f
     celdaEstado.alignment = { vertical: "middle", horizontal: "center" };
   });
 
-  hoja.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 9 } };
+  hoja.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 10 } };
   hoja.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: "1:1" };
+
+  // ── Hoja 3: Mesas (solo si ya se crearon mesas) ──────────────────────────
+  if (mesas.length > 0) {
+    const hojaMesas = libro.addWorksheet("Mesas", { views: [{ state: "frozen", ySplit: 1 }] });
+    hojaMesas.columns = [
+      { header: "Mesa", key: "mesa", width: 16 },
+      { header: "Lugares", key: "lugares", width: 10 },
+      { header: "Ocupados", key: "ocupados", width: 10 },
+      { header: "Personas", key: "personas", width: 90 },
+    ];
+    aplicarEncabezado(hojaMesas.getRow(1));
+
+    const confirmados = invitados.filter((i) => estadoDe(i) === "confirmado");
+    const personasDe = (gente) => gente.map((i) => (tieneAcompanante(i) ? `${i.nombre} (+ ${i.rsvp_acompanante.trim()})` : i.nombre)).join(", ");
+    const lugares = (gente) => gente.reduce((suma, i) => suma + (tieneAcompanante(i) ? 2 : 1), 0);
+
+    const filasMesas = mesas.map((m) => {
+      const gente = confirmados.filter((i) => i.mesa_id === m.id_mesa);
+      return { mesa: m.nombre, lugares: m.capacidad, ocupados: lugares(gente), personas: personasDe(gente) };
+    });
+    const sinMesa = confirmados.filter((i) => !i.mesa_nombre);
+    if (sinMesa.length > 0) filasMesas.push({ mesa: "Sin mesa", lugares: "", ocupados: lugares(sinMesa), personas: personasDe(sinMesa) });
+
+    filasMesas.forEach((datos) => {
+      const f = hojaMesas.addRow(datos);
+      f.alignment = { vertical: "top", wrapText: true };
+      f.eachCell((celda) => { celda.border = BORDES; });
+      f.getCell("mesa").font = { bold: true };
+      f.getCell("lugares").alignment = { vertical: "top", horizontal: "center" };
+      f.getCell("ocupados").alignment = { vertical: "top", horizontal: "center" };
+    });
+    hojaMesas.pageSetup = { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0, printTitlesRow: "1:1" };
+  }
 
   return libro;
 }
@@ -166,10 +210,10 @@ export function nombreArchivo(fecha = new Date()) {
   return `lista_invitados_${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}.xlsx`;
 }
 
-export async function exportarInvitadosExcel({ invitados, capacidad, pasesTotales }) {
+export async function exportarInvitadosExcel({ invitados, mesas = [], capacidad, pasesTotales }) {
   const [{ Workbook }, { saveAs }] = await Promise.all([import("exceljs"), import("file-saver-es")]);
   const fecha = new Date();
-  const libro = construirLibro(Workbook, { invitados, capacidad, pasesTotales, fecha });
+  const libro = construirLibro(Workbook, { invitados, mesas, capacidad, pasesTotales, fecha });
   const buffer = await libro.xlsx.writeBuffer();
   saveAs(
     new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),

@@ -115,6 +115,7 @@ const TCell = styled(Box)(() => ({
 
 export default function InvitadosIndexPage() {
   const [invitados, setInvitados] = useState([]);
+  const [mesas, setMesas] = useState([]);
   const [capacidad, setCapacidad] = useState(100);
   const [pasesTotales, setPasesTotales] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -131,6 +132,7 @@ export default function InvitadosIndexPage() {
     try {
       const res = await listar();
       setInvitados(res.invitados ?? []);
+      setMesas(res.mesas ?? []);
       setCapacidad(res.capacidad_maxima ?? 100);
       setPasesTotales(res.pases_totales ?? 0);
     } catch (e) { handleErrorMessages("Error", e); }
@@ -170,7 +172,7 @@ export default function InvitadosIndexPage() {
   const descargarExcel = async () => {
     setExportando(true);
     try {
-      await exportarInvitadosExcel({ invitados, capacidad, pasesTotales });
+      await exportarInvitadosExcel({ invitados, mesas, capacidad, pasesTotales });
     } catch (e) {
       handleErrorMessages("Error", { message: "No se pudo generar el Excel. Intenta de nuevo." });
     } finally {

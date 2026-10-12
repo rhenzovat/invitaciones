@@ -48,6 +48,7 @@ export const BANDEJAS_MENU_ITEMS: SidebarLeaf[] = [
   { name: "Sugerencias de cancion", path: "/cancion-sugerencias/index", id_menu: 22, icon: "music_note" },
   { name: "Fotos de invitados", path: "/galeria-fotos/index", id_menu: 23, icon: "photo_camera" },
   { name: "Lista de invitados", path: "/invitados/index", id_menu: 24, icon: "groups" },
+  { name: "Mesas", path: "/mesas/index", id_menu: 25, icon: "table_restaurant" },
 ];
 
 export function buildSidebarTree(): Array<SidebarGroup | SidebarLeaf> {

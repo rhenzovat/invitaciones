@@ -97,6 +97,7 @@ const EventoVideoIndexPage = Loadable(lazy(() => import("app/views/web/evento_vi
 const EventoGaleriaIndexPage = Loadable(lazy(() => import("app/views/web/evento_galeria/EventoGaleriaIndexPage")));
 const EventoDashboardIndexPage = Loadable(lazy(() => import("app/views/web/evento_dashboard/EventoDashboardIndexPage")));
 const InvitadosIndexPage = Loadable(lazy(() => import("app/views/web/invitados/InvitadosIndexPage")));
+const MesasIndexPage = Loadable(lazy(() => import("app/views/web/mesas/MesasIndexPage")));
 const AboutCaracteristicaIndexPage = Loadable(lazy(() => import("app/views/web/about_caracteristica/AboutCaracteristicaIndexPage")));
 const ConfianzaItemIndexPage = Loadable(lazy(() => import("app/views/web/confianza_item/ConfianzaItemIndexPage")));
 const InformeSistemaPage = Loadable(lazy(() => import("app/views/informe_sistema/InformeSistemaPage")));
@@ -195,6 +196,7 @@ const routes = [
       { path: "/evento-galeria/index", element: <EventoGaleriaIndexPage /> },
       { path: "/evento-dashboard/index", element: <EventoDashboardIndexPage /> },
       { path: "/invitados/index", element: <InvitadosIndexPage /> },
+      { path: "/mesas/index", element: <MesasIndexPage /> },
       { path: "/about-caracteristica/index", element: <AboutCaracteristicaIndexPage /> },
       { path: "/confianza-item/index", element: <ConfianzaItemIndexPage /> },
       { path: "/informe-sistema/index", element: <InformeSistemaPage /> },
