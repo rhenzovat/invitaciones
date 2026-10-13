@@ -9,6 +9,7 @@ import {
   CrearMesasDto,
   CrearReglaDto,
   PorGrupoDto,
+  PosicionMesaDto,
 } from "./dto/mesas.dto";
 import {
   armarProblema,
@@ -29,7 +30,7 @@ type Unidad = UnidadMesa & { acompanante: string | null; grupo: string | null };
 
 interface Contexto {
   unidades: Unidad[];
-  mesas: MesaInfo[];
+  mesas: (MesaInfo & { pos_x: number | null; pos_y: number | null })[];
   reglas: ReglaInfo[];
   asignacion: Map<number, number>;
   nombres: Map<number, string>;
@@ -67,7 +68,7 @@ export class WebMesasService {
 
     return {
       unidades,
-      mesas: mesas.map((m) => ({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })),
+      mesas: mesas.map((m) => ({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad, pos_x: m.pos_x, pos_y: m.pos_y })),
       reglas: reglas.map((r) => ({
         id_regla: r.id_regla,
         tipo: r.tipo as TipoRegla,
@@ -126,6 +127,8 @@ export class WebMesasService {
         id_mesa: m.id_mesa,
         nombre: m.nombre,
         capacidad: m.capacidad,
+        pos_x: m.pos_x,
+        pos_y: m.pos_y,
         ocupados: gente.reduce((s, u) => s + u.tamano, 0),
         personas: gente.map(persona),
       };
@@ -194,6 +197,13 @@ export class WebMesasService {
       data: { nombre: dto.nombre, capacidad: dto.capacidad },
     });
     return { success: true, message: "Mesa actualizada." };
+  }
+
+  async moverMesa(dto: PosicionMesaDto) {
+    const existe = await this.prisma.webMesa.findUnique({ where: { id_mesa: dto.id_mesa } });
+    if (!existe) throw new BadRequestException("La mesa no existe.");
+    await this.prisma.webMesa.update({ where: { id_mesa: dto.id_mesa }, data: { pos_x: dto.x, pos_y: dto.y } });
+    return { success: true, message: "Posicion guardada." };
   }
 
   async eliminarMesa(id_mesa: number) {

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
+import PlanoMesas from "./PlanoMesas";
 import {
   Box, Typography, Paper, Chip, IconButton, Tooltip, TextField, Button, LinearProgress, Dialog, DialogTitle,
   DialogContent, DialogActions, Select, MenuItem, FormControl, InputLabel, Autocomplete, Checkbox,
-  FormControlLabel, Alert, CircularProgress,
+  FormControlLabel, Alert, CircularProgress, ToggleButton, ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import TableRestaurantIcon from "@mui/icons-material/TableRestaurant";
@@ -12,9 +13,11 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import GroupWorkIcon from "@mui/icons-material/GroupWork";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import MapIcon from "@mui/icons-material/Map";
 
 import {
-  listar, crearMesas, actualizarMesa, eliminarMesa, crearRegla, juntarPorGrupo, eliminarRegla, asignar, limpiar, optimizar, aceptar,
+  listar, crearMesas, actualizarMesa, moverMesa, eliminarMesa, crearRegla, juntarPorGrupo, eliminarRegla, asignar, limpiar, optimizar, aceptar,
 } from "../../../api/web_mesas.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
 
@@ -92,6 +95,14 @@ export default function MesasIndexPage() {
   const [opt, setOpt] = useState(null);
   const [minimizar, setMinimizar] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [vista, setVista] = useState(() => {
+    try { return localStorage.getItem("mesas_vista") === "lista" ? "lista" : "plano"; } catch { return "plano"; }
+  });
+  const cambiarVista = (_, v) => {
+    if (!v) return;
+    setVista(v);
+    try { localStorage.setItem("mesas_vista", v); } catch { /* sin almacenamiento: no se recuerda */ }
+  };
 
   const cargar = async () => {
     try { setDatos(await listar()); }
@@ -102,6 +113,11 @@ export default function MesasIndexPage() {
 
   const mesas = datos?.mesas ?? [];
   const resumen = datos?.resumen;
+
+  const guardarPosicion = async (id_mesa, x, y) => {
+    try { await moverMesa(id_mesa, x, y); }
+    catch (e) { handleErrorMessages("No se guardó la posición de la mesa", e); }
+  };
 
   const mover = async (id_invitado, id_mesa) => {
     try {
@@ -259,7 +275,24 @@ export default function MesasIndexPage() {
             </Alert>
           )}
 
-          {datos.sinMesa.length > 0 && (
+          {mesas.length > 0 && (
+            <ToggleButtonGroup size="small" exclusive value={vista} onChange={cambiarVista} sx={{ mb: 2, bgcolor: "#fff" }}>
+              <ToggleButton value="plano" sx={{ textTransform: "none", fontWeight: 700, gap: 0.6 }}><MapIcon sx={{ fontSize: 18 }} />Plano</ToggleButton>
+              <ToggleButton value="lista" sx={{ textTransform: "none", fontWeight: 700, gap: 0.6 }}><ViewListIcon sx={{ fontSize: 18 }} />Lista</ToggleButton>
+            </ToggleButtonGroup>
+          )}
+
+          {mesas.length > 0 && vista === "plano" && (
+            <PlanoMesas
+              mesas={mesas} sinMesa={datos.sinMesa}
+              renderPersona={(p, mesaActual) => <FilaPersona persona={p} mesaActual={mesaActual} mesas={mesas} onMover={mover} />}
+              onMover={mover} onPosicion={guardarPosicion}
+              onEditar={(m) => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })}
+              onBorrar={borrarMesa}
+            />
+          )}
+
+          {vista === "lista" && datos.sinMesa.length > 0 && (
             <Card sx={{ mb: 2 }}>
               <Typography sx={{ fontWeight: 800, color: "#7a4030", fontSize: "0.8rem", mb: 0.5 }}>
                 SIN MESA ({datos.sinMesa.length})
@@ -276,7 +309,7 @@ export default function MesasIndexPage() {
             <Card sx={{ textAlign: "center", color: "#b8a090", py: 4 }}>
               Aún no hay mesas. Usa «Agregar mesas» para crearlas (por ejemplo 8 mesas de 10 lugares).
             </Card>
-          ) : (
+          ) : vista === "plano" ? null : (
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", xl: "1fr 1fr 1fr" }, gap: 2, mb: 3 }}>
               {mesas.map((m) => {
                 const pct = Math.min(100, Math.round((m.ocupados / m.capacidad) * 100));

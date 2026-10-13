@@ -11,6 +11,7 @@ import {
   EliminarReglaDto,
   OptimizarDto,
   PorGrupoDto,
+  PosicionMesaDto,
 } from "./dto/mesas.dto";
 import { WebMesasService } from "./web-mesas.service";
 
@@ -34,6 +35,12 @@ export class WebMesasController {
   @HttpCode(HttpStatus.OK)
   actualizar(@Body() dto: ActualizarMesaDto) {
     return this.service.actualizarMesa(dto);
+  }
+
+  @Post("posicion")
+  @HttpCode(HttpStatus.OK)
+  posicion(@Body() dto: PosicionMesaDto) {
+    return this.service.moverMesa(dto);
   }
 
   @Delete("eliminar")

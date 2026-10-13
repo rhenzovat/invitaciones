@@ -227,6 +227,9 @@ model WebMesa {
   id_mesa   Int      @id @default(autoincrement())
   nombre    String   @db.VarChar(100)
   capacidad Int
+  /// Posicion de la mesa en el plano (px). Null = el plano la acomoda solo.
+  pos_x     Int?
+  pos_y     Int?
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
