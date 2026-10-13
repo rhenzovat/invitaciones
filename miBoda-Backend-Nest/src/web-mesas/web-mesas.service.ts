@@ -8,6 +8,7 @@ import {
   AsignarDto,
   CrearMesasDto,
   CrearReglaDto,
+  PorGrupoDto,
 } from "./dto/mesas.dto";
 import {
   armarProblema,
@@ -17,13 +18,14 @@ import {
   ReglaInfo,
   Severidad,
   TipoRegla,
+  reglasPorGrupo,
   tamanoDeUnidad,
   UnidadMesa,
   verificarDistribucion,
   ResultadoVerificacion,
 } from "./mesas.util";
 
-type Unidad = UnidadMesa & { acompanante: string | null };
+type Unidad = UnidadMesa & { acompanante: string | null; grupo: string | null };
 
 interface Contexto {
   unidades: Unidad[];
@@ -60,7 +62,7 @@ export class WebMesasService {
       .filter((i) => respuestaDe.has(i.id_invitado))
       .map((i) => {
         const acompanante = respuestaDe.get(i.id_invitado)?.acompanante?.trim() || null;
-        return { id_invitado: i.id_invitado, nombre: i.nombre, acompanante, tamano: tamanoDeUnidad(acompanante) };
+        return { id_invitado: i.id_invitado, nombre: i.nombre, acompanante, grupo: i.grupo ?? null, tamano: tamanoDeUnidad(acompanante) };
       });
 
     return {
@@ -73,6 +75,7 @@ export class WebMesasService {
         peso: r.peso,
         sujetos: Array.isArray(r.sujetos) ? (r.sujetos as unknown[]).map(Number).filter(Number.isInteger) : [],
         id_mesa: r.id_mesa,
+        grupo: r.grupo ?? null,
       })),
       asignacion: new Map(asignaciones.map((a) => [a.id_invitado, a.id_mesa])),
       nombres: new Map(invitados.map((i) => [i.id_invitado, i.nombre])),
@@ -113,6 +116,7 @@ export class WebMesasService {
       id_invitado: u.id_invitado,
       nombre: u.nombre,
       acompanante: u.acompanante,
+      grupo: u.grupo,
       tamano: u.tamano,
     });
 
@@ -142,6 +146,7 @@ export class WebMesasService {
           severidad: r.severidad,
           peso: r.peso,
           id_mesa: r.id_mesa,
+          grupo: r.grupo,
           mesa_nombre: r.id_mesa != null ? nombreMesa.get(r.id_mesa) ?? null : null,
           sujetos: r.sujetos.map((i) => ({
             id_invitado: i,
@@ -224,6 +229,30 @@ export class WebMesasService {
       },
     });
     return { success: true, message: "Regla agregada." };
+  }
+
+  /** Rehace las reglas "juntos" de cada grupo. Las reglas hechas a mano no se tocan. */
+  async juntarPorGrupo(dto: PorGrupoDto) {
+    const ctx = await this.contexto();
+    if (ctx.mesas.length === 0) throw new BadRequestException("Primero crea al menos una mesa.");
+    const capacidadMaxima = Math.max(...ctx.mesas.map((m) => m.capacidad));
+    const nuevas = reglasPorGrupo(ctx.unidades, capacidadMaxima);
+    const peso = dto.peso ?? 50;
+
+    const [borradas] = await this.prisma.$transaction([
+      this.prisma.webMesaRegla.deleteMany({ where: { grupo: { not: null } } }),
+      this.prisma.webMesaRegla.createMany({
+        data: nuevas.map((n) => ({ tipo: "SAME_TABLE", severidad: "SOFT", peso, sujetos: n.sujetos, grupo: n.grupo })),
+      }),
+    ]);
+
+    const grupos = new Set(nuevas.map((n) => n.grupo)).size;
+    const sinGrupo = ctx.unidades.filter((u) => !(u.grupo ?? "").trim()).length;
+    const mensaje =
+      nuevas.length === 0
+        ? "No hay grupos con dos o mas invitados confirmados. Asigna un grupo a los invitados."
+        : `${nuevas.length} ${nuevas.length === 1 ? "regla creada" : "reglas creadas"} para ${grupos} ${grupos === 1 ? "grupo" : "grupos"}.`;
+    return { success: true, message: mensaje, result: { creadas: nuevas.length, grupos, reemplazadas: borradas.count, sinGrupo } };
   }
 
   async eliminarRegla(id_regla: number) {

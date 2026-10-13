@@ -43,7 +43,12 @@ const TableWrap = styled(Paper)(() => ({
   boxShadow: "0 4px 24px rgba(44,26,14,0.08)",
 }));
 
-const GRID_COLS = "1.3fr 140px 70px 105px 1fr 120px 1fr 80px";
+const GRID_COLS = "1.3fr 140px 70px 105px 1fr 120px 140px 1fr 80px";
+
+const GRUPOS_SUGERIDOS = [
+  "Amigos de la novia", "Amigos del novio", "Tíos de la novia", "Tíos del novio",
+  "Primos de la novia", "Primos del novio", "Universidad", "Colegas policiales", "Familia cercana", "Trabajo",
+];
 
 function normalizar(s) {
   return (s || "")
@@ -122,7 +127,7 @@ export default function InvitadosIndexPage() {
   const [saving, setSaving] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [panel, setPanel] = useState(false);
-  const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "", celular: "" });
+  const [form, setForm] = useState({ nombre: "", pases_asignados: 1, notas: "", celular: "", grupo: "" });
   const [busqueda, setBusqueda] = useState("");
   const [filtroFamilia, setFiltroFamilia] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -141,7 +146,7 @@ export default function InvitadosIndexPage() {
 
   useEffect(() => { cargar(); }, []);
 
-  const abrirNuevo = () => { setForm({ nombre: "", pases_asignados: 1, notas: "", celular: "" }); setPanel(true); };
+  const abrirNuevo = () => { setForm({ nombre: "", pases_asignados: 1, notas: "", celular: "", grupo: "" }); setPanel(true); };
   const abrirEditar = (inv) => {
     setForm({
       id_invitado: inv.id_invitado,
@@ -149,6 +154,7 @@ export default function InvitadosIndexPage() {
       pases_asignados: inv.pases_asignados,
       notas: inv.notas || "",
       celular: inv.celular || "",
+      grupo: inv.grupo || "",
       rsvp_estado: inv.rsvp_estado || "pendiente",
       rsvp_acompanante: inv.rsvp_acompanante || "",
     });
@@ -220,10 +226,13 @@ export default function InvitadosIndexPage() {
     ? invitadosPorEstado.filter((inv) =>
         normalizar(inv.nombre).includes(terminoBusqueda) ||
         normalizar(inv.notas).includes(terminoBusqueda) ||
+        normalizar(inv.grupo).includes(terminoBusqueda) ||
         normalizar(inv.rsvp_acompanante).includes(terminoBusqueda) ||
         (digitosBusqueda.length >= 3 && soloDigitos(inv.celular).includes(digitosBusqueda)),
       )
     : invitadosPorEstado;
+
+  const gruposDisponibles = [...new Set([...GRUPOS_SUGERIDOS, ...invitados.map((i) => i.grupo).filter(Boolean)])];
 
   const hayFiltrosActivos = terminoBusqueda || filtroFamilia !== "todos" || filtroEstado !== "todos";
 
@@ -275,7 +284,7 @@ export default function InvitadosIndexPage() {
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 1.5 }}>
         <TextField
           size="small"
-          placeholder="Buscar por nombre, celular, notas o acompañante..."
+          placeholder="Buscar por nombre, celular, grupo, notas o acompañante..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           sx={{
@@ -350,7 +359,7 @@ export default function InvitadosIndexPage() {
       </Box>
 
       <TableWrap elevation={0}>
-        <Box sx={{ minWidth: 1120 }}>
+        <Box sx={{ minWidth: 1260 }}>
         <THead>
           <THeadCell>Nombre</THeadCell>
           <THeadCell>Celular</THeadCell>
@@ -358,6 +367,7 @@ export default function InvitadosIndexPage() {
           <THeadCell>Fecha confirmó</THeadCell>
           <THeadCell>Acompañante</THeadCell>
           <THeadCell>Estado RSVP</THeadCell>
+          <THeadCell>Grupo</THeadCell>
           <THeadCell>Notas</THeadCell>
           <THeadCell></THeadCell>
         </THead>
@@ -397,6 +407,13 @@ export default function InvitadosIndexPage() {
                   return <Chip size="small" label={chip.label} sx={{ bgcolor: chip.bgcolor, color: chip.color, fontWeight: 700 }} />;
                 })()}
               </TCell>
+              <TCell>
+                {inv.grupo ? (
+                  <Chip size="small" label={inv.grupo} sx={{ bgcolor: "rgba(44,26,14,0.07)", color: "#4a2a15", fontWeight: 700, maxWidth: "100%" }} />
+                ) : (
+                  <Typography sx={{ fontSize: "0.78rem", color: "#b8a090" }}>—</Typography>
+                )}
+              </TCell>
               <TCell><Typography sx={{ fontSize: "0.78rem", color: "#8a7a5c" }}>{inv.notas || "—"}</Typography></TCell>
               <TCell sx={{ gap: 0.5 }}>
                 <Tooltip title="Editar">
@@ -416,6 +433,19 @@ export default function InvitadosIndexPage() {
         <EditPanel open title={form.id_invitado ? "Editar invitado" : "Agregar invitado"} onClose={() => setPanel(false)} onSave={guardar} saving={saving}>
           <TextField {...darkTf} label="Nombre" value={form.nombre} onChange={(e) => set("nombre", e.target.value)} />
           <TextField {...darkTf} type="tel" label="Celular (opcional)" placeholder="Ej: 987 654 321" inputProps={{ maxLength: 30 }} value={form.celular} onChange={(e) => set("celular", e.target.value)} />
+          <TextField
+            {...darkTf}
+            label="Grupo (opcional)"
+            placeholder="Ej: Amigos de la novia"
+            helperText="Sirve para sentar juntos a los del mismo grupo (en Mesas, botón Juntar por grupo)."
+            FormHelperTextProps={{ sx: { color: "rgba(255,255,255,0.45)" } }}
+            inputProps={{ maxLength: 60, list: "grupos-invitados" }}
+            value={form.grupo || ""}
+            onChange={(e) => set("grupo", e.target.value)}
+          />
+          <datalist id="grupos-invitados">
+            {gruposDisponibles.map((g) => <option key={g} value={g} />)}
+          </datalist>
           <TextField {...darkTf} type="number" label="Pases asignados" inputProps={{ min: 1, max: 50 }} value={form.pases_asignados} onChange={(e) => set("pases_asignados", parseInt(e.target.value || "1", 10))} />
           {form.id_invitado && (
             <>

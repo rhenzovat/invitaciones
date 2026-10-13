@@ -1,9 +1,11 @@
 import {
   armarProblema,
+  claveGrupo,
   humanizar,
   idDe,
   ReglaInfo,
   reglasAplicables,
+  reglasPorGrupo,
   tamanoDeUnidad,
   verificarDistribucion,
 } from "./mesas.util";
@@ -126,12 +128,44 @@ describe("humanizar / idDe", () => {
     const inv = new Map([[2, "Ana Torres"], [3, "Beto Rios"]]);
     const mesas = new Map([[10, "Mesa 1"]]);
     expect(humanizar("u2 y u3 comparten mesa (regla r5) en m10; u9 no existe.", inv, mesas)).toBe(
-      "Ana Torres y Beto Rios comparten mesa (regla regla 5) en Mesa 1; u9 no existe.",
+      "Ana Torres y Beto Rios comparten mesa (regla 5) en Mesa 1; u9 no existe.",
     );
+    expect(humanizar("Quita la regla r16 o r13.", inv, mesas)).toBe("Quita la regla 16 o regla 13.");
   });
 
   it("idDe extrae el numero del id opaco", () => {
     expect(idDe("u12")).toBe(12);
     expect(Number.isNaN(idDe("x"))).toBe(true);
+  });
+});
+
+describe("reglasPorGrupo", () => {
+  const u = (id: number, grupo: string | null, tamano = 1) => ({ id_invitado: id, tamano, grupo });
+
+  it("una regla por grupo y sin regla para quien no tiene grupo o va solo", () => {
+    const r = reglasPorGrupo([u(1, "Amigos"), u(2, "Amigos"), u(3, "Tios"), u(4, null), u(5, "  "), u(6, "Tios"), u(7, "Solo")], 10);
+    expect(r).toEqual([
+      { grupo: "Amigos", sujetos: [1, 2] },
+      { grupo: "Tios", sujetos: [3, 6] },
+    ]);
+  });
+
+  it("agrupa sin importar mayusculas, tildes ni espacios", () => {
+    expect(claveGrupo("  Tíos   de NOVIA ")).toBe("tios de novia");
+    const r = reglasPorGrupo([u(1, "Tíos de novia"), u(2, "tios  de NOVIA")], 10);
+    expect(r).toHaveLength(1);
+    expect(r[0].sujetos).toEqual([1, 2]);
+  });
+
+  it("parte un grupo mas grande que la mesa en tandas que si caben", () => {
+    const miembros = Array.from({ length: 7 }, (_, i) => u(i + 1, "Uni", 2)); // 14 personas, mesa de 10
+    const r = reglasPorGrupo(miembros, 10);
+    expect(r.map((x) => x.sujetos.length).sort()).toEqual([2, 5]);
+    for (const regla of r) expect(regla.sujetos.length * 2).toBeLessThanOrEqual(10);
+    expect(r.flatMap((x) => x.sujetos).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+  });
+
+  it("ignora una unidad que no cabe en ninguna mesa", () => {
+    expect(reglasPorGrupo([u(1, "G", 2), u(2, "G", 2)], 1)).toEqual([]);
   });
 });

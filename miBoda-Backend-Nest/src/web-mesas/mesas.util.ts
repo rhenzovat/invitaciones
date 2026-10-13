@@ -18,6 +18,7 @@ export interface ReglaInfo {
   peso: number | null;
   sujetos: number[];
   id_mesa: number | null;
+  grupo?: string | null;
 }
 
 export const uid = (id: number) => `u${id}`;
@@ -125,10 +126,57 @@ export function verificarDistribucion(
   return { excedidas, violaciones };
 }
 
+export const GRUPO_MAX = 60;
+
+/** Dos grupos son el mismo aunque cambien mayusculas, tildes o espacios ("Amigos  de Novia" = "amigos de novia"). */
+export const claveGrupo = (g: string | null | undefined) =>
+  (g ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+export interface UnidadGrupo {
+  id_invitado: number;
+  tamano: number;
+  grupo: string | null;
+}
+
+/**
+ * Una regla "juntos" por grupo. Un grupo mas grande que la mesa mas grande se parte en tandas que si caben
+ * (si no, la regla nunca se podria cumplir y el optimizador la ignoraria por completo). Quien queda solo en su tanda
+ * no lleva regla.
+ */
+export function reglasPorGrupo(unidades: UnidadGrupo[], capacidadMaxima: number): { grupo: string; sujetos: number[] }[] {
+  const grupos = new Map<string, { nombre: string; miembros: UnidadGrupo[] }>();
+  for (const u of unidades) {
+    const clave = claveGrupo(u.grupo);
+    if (!clave) continue;
+    const g = grupos.get(clave) ?? { nombre: (u.grupo as string).replace(/\s+/g, " ").trim(), miembros: [] };
+    g.miembros.push(u);
+    grupos.set(clave, g);
+  }
+
+  const reglas: { grupo: string; sujetos: number[] }[] = [];
+  for (const { nombre, miembros } of grupos.values()) {
+    // Primero los mas grandes (first-fit decreasing); a igualdad, por id para que el resultado sea estable.
+    const orden = [...miembros].sort((a, b) => b.tamano - a.tamano || a.id_invitado - b.id_invitado);
+    const tandas: { libre: number; ids: number[] }[] = [];
+    for (const u of orden) {
+      if (u.tamano > capacidadMaxima) continue;
+      const tanda = tandas.find((t) => t.libre >= u.tamano);
+      if (tanda) {
+        tanda.libre -= u.tamano;
+        tanda.ids.push(u.id_invitado);
+      } else {
+        tandas.push({ libre: capacidadMaxima - u.tamano, ids: [u.id_invitado] });
+      }
+    }
+    for (const t of tandas) if (t.ids.length >= 2) reglas.push({ grupo: nombre, sujetos: t.ids.sort((a, b) => a - b) });
+  }
+  return reglas;
+}
+
 /** Cambia los ids opacos de un mensaje del optimizador por nombres legibles. */
 export function humanizar(texto: string | undefined | null, invitados: Map<number, string>, mesas: Map<number, string>): string {
   return (texto ?? "")
     .replace(/\bu(\d+)\b/g, (m, n) => invitados.get(Number(n)) ?? m)
     .replace(/\bm(\d+)\b/g, (m, n) => mesas.get(Number(n)) ?? m)
-    .replace(/\br(\d+)\b/g, (_m, n) => `regla ${n}`);
+    .replace(/\b(?:regla\s+)?r(\d+)\b/gi, (_m, n) => `regla ${n}`);
 }

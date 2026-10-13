@@ -40,6 +40,10 @@ export class CrearReglaDto {
   @IsOptional() @IsInt() id_mesa?: number;
 }
 
+export class PorGrupoDto {
+  @IsOptional() @IsInt() @Min(1) @Max(1000) peso?: number;
+}
+
 export class EliminarReglaDto {
   @IsInt() id_regla!: number;
 }

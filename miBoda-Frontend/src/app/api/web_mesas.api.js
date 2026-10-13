@@ -24,6 +24,11 @@ export function crearRegla(datos) {
   return from(apiClient.post(`${URL}/reglas/crear`, datos)).pipe(map((r) => r.data)).toPromise();
 }
 
+// Rehace las reglas "juntos" de cada grupo (las reglas manuales no se tocan).
+export function juntarPorGrupo() {
+  return from(apiClient.post(`${URL}/reglas/por_grupo`, {})).pipe(map((r) => r.data)).toPromise();
+}
+
 export function eliminarRegla(id_regla) {
   return from(apiClient.delete(`${URL}/reglas/eliminar`, { data: { id_regla } })).pipe(map((r) => r.data)).toPromise();
 }

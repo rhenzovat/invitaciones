@@ -76,6 +76,7 @@ export class WebInvitadosController {
         pases_asignados: dto.pases_asignados,
         notas: dto.notas ?? null,
         celular: dto.celular || null,
+        grupo: dto.grupo || null,
       },
     });
     return { success: true, message: "Invitado agregado correctamente.", result: invitado };
@@ -96,6 +97,7 @@ export class WebInvitadosController {
           notas: dto.notas ?? null,
           // Solo se toca si viene en la peticion: un panel con la version vieja en cache no debe borrar los celulares.
           ...(dto.celular !== undefined ? { celular: dto.celular || null } : {}),
+          ...(dto.grupo !== undefined ? { grupo: dto.grupo || null } : {}),
         },
       });
 

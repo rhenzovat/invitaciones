@@ -11,9 +11,10 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import GroupWorkIcon from "@mui/icons-material/GroupWork";
 
 import {
-  listar, crearMesas, actualizarMesa, eliminarMesa, crearRegla, eliminarRegla, asignar, limpiar, optimizar, aceptar,
+  listar, crearMesas, actualizarMesa, eliminarMesa, crearRegla, juntarPorGrupo, eliminarRegla, asignar, limpiar, optimizar, aceptar,
 } from "../../../api/web_mesas.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
 
@@ -71,6 +72,9 @@ function FilaPersona({ persona, mesaActual, mesas, onMover }) {
         <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: "#2c1a0e", lineHeight: 1.2 }}>{persona.nombre}</Typography>
         {persona.acompanante && (
           <Typography sx={{ fontSize: "0.72rem", color: "#8a7a5c" }}>+ {persona.acompanante}</Typography>
+        )}
+        {persona.grupo && (
+          <Typography sx={{ fontSize: "0.68rem", color: "#a0455e", fontWeight: 600 }}>{persona.grupo}</Typography>
         )}
       </Box>
       <SelectorMesa valor={mesaActual} mesas={mesas} onChange={(id) => onMover(persona.id_invitado, id)} />
@@ -142,6 +146,21 @@ export default function MesasIndexPage() {
       ...(r.tipo === "FIXED_TABLE" ? { id_mesa: r.id_mesa === "" ? undefined : r.id_mesa } : {}),
     };
     if (await ejecutar(() => crearRegla(datosRegla))) setDlgRegla(null);
+  };
+  const juntarGrupos = async () => {
+    const hayAuto = (datos?.reglas ?? []).some((r) => r.grupo);
+    if (hayAuto) {
+      const c = await confirmAction("Ya hay reglas por grupo. Se van a rehacer con los grupos actuales (tus reglas manuales no se tocan).", "Sí, rehacer", "Cancelar");
+      if (!c.isConfirmed) return;
+    }
+    setGuardando(true);
+    try {
+      const res = await juntarPorGrupo();
+      const sinGrupo = res.result?.sinGrupo ?? 0;
+      handleSuccessMessages("Listo", sinGrupo > 0 ? `${res.message} ${sinGrupo} confirmados no tienen grupo.` : res.message);
+      await cargar();
+    } catch (e) { handleErrorMessages("Error", e); }
+    finally { setGuardando(false); }
   };
   const borrarRegla = async (r) => {
     const c = await confirmAction("¿Eliminar esta regla?", "Sí, eliminar", "Cancelar");
@@ -295,19 +314,29 @@ export default function MesasIndexPage() {
           <Card>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
               <Typography sx={{ fontWeight: 800, color: "#7a4030", fontSize: "0.8rem" }}>REGLAS DEL ORGANIZADOR ({datos.reglas.length})</Typography>
-              <Button size="small" startIcon={<AddIcon />} onClick={() => setDlgRegla({ ...REGLA_INICIAL })} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>
-                Agregar regla
-              </Button>
+              <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                <Tooltip title="Crea una regla preferible de «juntos» por cada grupo de invitados (Amigos de la novia, Tíos del novio, etc.)">
+                  <span>
+                    <Button size="small" startIcon={<GroupWorkIcon />} onClick={juntarGrupos} disabled={guardando || mesas.length === 0} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>
+                      Juntar por grupo
+                    </Button>
+                  </span>
+                </Tooltip>
+                <Button size="small" startIcon={<AddIcon />} onClick={() => setDlgRegla({ ...REGLA_INICIAL })} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>
+                  Agregar regla
+                </Button>
+              </Box>
             </Box>
             {datos.reglas.length === 0 ? (
               <Typography sx={{ fontSize: "0.8rem", color: "#b8a090" }}>
-                Sin reglas. Ejemplos: que dos familias se sienten juntas, que dos personas no coincidan, o fijar a alguien en una mesa.
+                Sin reglas. Asigna un grupo a tus invitados y pulsa «Juntar por grupo», o agrega reglas a mano: que dos familias se sienten juntas, que dos personas no coincidan, o fijar a alguien en una mesa.
               </Typography>
             ) : (
               datos.reglas.map((r) => (
                 <Box key={r.id_regla} sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, py: 0.7, borderTop: "1px solid rgba(204,107,142,0.1)" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, flexWrap: "wrap", minWidth: 0 }}>
                     <Chip size="small" label={r.tipo === "FIXED_TABLE" ? `Fijo en ${r.mesa_nombre ?? "?"}` : TIPOS[r.tipo]} sx={{ fontWeight: 700, bgcolor: "rgba(44,26,14,0.08)" }} />
+                    {r.grupo && <Chip size="small" label={`Grupo: ${r.grupo}`} sx={{ fontWeight: 700, bgcolor: "rgba(204,107,142,0.14)", color: "#a0455e" }} />}
                     <Chip
                       size="small" label={r.severidad === "HARD" ? "Obligatoria" : `Preferible (${r.peso})`}
                       sx={{ fontWeight: 700, bgcolor: r.severidad === "HARD" ? "rgba(239,68,68,0.14)" : "rgba(245,158,11,0.16)", color: r.severidad === "HARD" ? "#dc2626" : "#b45309" }}

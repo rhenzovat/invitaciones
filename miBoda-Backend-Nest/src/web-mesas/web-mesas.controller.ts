@@ -10,6 +10,7 @@ import {
   EliminarMesaDto,
   EliminarReglaDto,
   OptimizarDto,
+  PorGrupoDto,
 } from "./dto/mesas.dto";
 import { WebMesasService } from "./web-mesas.service";
 
@@ -44,6 +45,12 @@ export class WebMesasController {
   @HttpCode(HttpStatus.OK)
   crearRegla(@Body() dto: CrearReglaDto) {
     return this.service.crearRegla(dto);
+  }
+
+  @Post("reglas/por_grupo")
+  @HttpCode(HttpStatus.OK)
+  juntarPorGrupo(@Body() dto: PorGrupoDto) {
+    return this.service.juntarPorGrupo(dto);
   }
 
   @Delete("reglas/eliminar")

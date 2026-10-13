@@ -164,6 +164,7 @@ model WebInvitado {
   pases_asignados  Int      @default(1)
   notas            String?  @db.Text
   celular          String?  @db.VarChar(30)
+  grupo            String?  @db.VarChar(60)
   Activo           String   @default("S") @db.VarChar(1)
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
@@ -253,6 +254,8 @@ model WebMesaRegla {
   peso      Int?
   sujetos   Json
   id_mesa   Int?
+  /// Si viene de "Juntar por grupo": nombre del grupo. Null = regla creada a mano.
+  grupo     String?  @db.VarChar(60)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("web_mesa_reglas")

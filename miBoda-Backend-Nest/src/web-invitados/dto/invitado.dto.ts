@@ -26,6 +26,12 @@ export class CrearInvitadoDto {
   @MaxLength(30)
   @Matches(/^[0-9+()\-.\s]*$/, { message: "El celular solo puede tener números, espacios y + - ( )." })
   celular?: string;
+
+  @IsOptional()
+  @Transform(recortar)
+  @IsString()
+  @MaxLength(60)
+  grupo?: string;
 }
 
 export class ActualizarInvitadoDto extends CrearInvitadoDto {
