@@ -3,8 +3,10 @@ import {
   claveGrupo,
   humanizar,
   idDe,
+  paresSeparados,
   ReglaInfo,
   reglasAplicables,
+  reglasJuntosEntreGrupos,
   reglasPorGrupo,
   tamanoDeUnidad,
   verificarDistribucion,
@@ -167,5 +169,27 @@ describe("reglasPorGrupo", () => {
 
   it("ignora una unidad que no cabe en ninguna mesa", () => {
     expect(reglasPorGrupo([u(1, "G", 2), u(2, "G", 2)], 1)).toEqual([]);
+  });
+});
+
+describe("reglas entre grupos", () => {
+  const u = (id: number, tamano = 1) => ({ id_invitado: id, tamano, grupo: "g" });
+
+  it("juntos: si caben todos, una sola regla con ambos grupos", () => {
+    const r = reglasJuntosEntreGrupos([[u(1), u(2), u(3)], [u(4), u(5), u(6), u(7)]], 10);
+    expect(r).toEqual([[1, 2, 3, 4, 5, 6, 7]]);
+  });
+
+  it("juntos: si no caben, llena una mesa tras otra respetando el orden de los grupos", () => {
+    const r = reglasJuntosEntreGrupos([[u(1), u(2), u(3)], [u(4), u(5), u(6), u(7)]], 5);
+    expect(r).toEqual([[1, 2, 3, 4, 5], [6, 7]]);
+  });
+
+  it("juntos: la persona sola en su tanda no lleva regla", () => {
+    expect(reglasJuntosEntreGrupos([[u(1), u(2)], [u(3)]], 2)).toEqual([[1, 2]]);
+  });
+
+  it("separados: un par por cada miembro de A con cada miembro de B", () => {
+    expect(paresSeparados([[1, 2], [3], [4]])).toEqual([[1, 3], [2, 3], [1, 4], [2, 4], [3, 4]]);
   });
 });

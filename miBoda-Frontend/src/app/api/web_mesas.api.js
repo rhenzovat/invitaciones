@@ -33,6 +33,11 @@ export function juntarPorGrupo() {
   return from(apiClient.post(`${URL}/reglas/por_grupo`, {})).pipe(map((r) => r.data)).toPromise();
 }
 
+// Une o separa a todos los miembros de varios grupos ("Tinco + Vargas" juntos).
+export function reglaEntreGrupos(datos) {
+  return from(apiClient.post(`${URL}/reglas/entre_grupos`, datos)).pipe(map((r) => r.data)).toPromise();
+}
+
 export function eliminarRegla(id_regla) {
   return from(apiClient.delete(`${URL}/reglas/eliminar`, { data: { id_regla } })).pipe(map((r) => r.data)).toPromise();
 }

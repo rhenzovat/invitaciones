@@ -8,6 +8,7 @@ import {
   AsignarDto,
   CrearMesasDto,
   CrearReglaDto,
+  EntreGruposDto,
   PorGrupoDto,
   PosicionMesaDto,
 } from "./dto/mesas.dto";
@@ -19,7 +20,10 @@ import {
   ReglaInfo,
   Severidad,
   TipoRegla,
+  paresSeparados,
+  reglasJuntosEntreGrupos,
   reglasPorGrupo,
+  claveGrupo,
   tamanoDeUnidad,
   UnidadMesa,
   verificarDistribucion,
@@ -77,6 +81,7 @@ export class WebMesasService {
         sujetos: Array.isArray(r.sujetos) ? (r.sujetos as unknown[]).map(Number).filter(Number.isInteger) : [],
         id_mesa: r.id_mesa,
         grupo: r.grupo ?? null,
+        etiqueta: r.etiqueta ?? null,
       })),
       asignacion: new Map(asignaciones.map((a) => [a.id_invitado, a.id_mesa])),
       nombres: new Map(invitados.map((i) => [i.id_invitado, i.nombre])),
@@ -108,6 +113,24 @@ export class WebMesasService {
       ctx.reglas,
       asignacion,
     );
+  }
+
+  /** Las reglas de una misma regla "entre grupos" (muchas filas) se muestran como una sola. */
+  private reglasParaMostrar(reglas: ReglaInfo[]): ReglaInfo[] {
+    const vistas = new Map<string, ReglaInfo>();
+    const salida: ReglaInfo[] = [];
+    for (const r of reglas) {
+      if (!r.etiqueta) { salida.push(r); continue; }
+      const clave = `${r.tipo}|${r.severidad}|${r.etiqueta}`;
+      const previa = vistas.get(clave);
+      if (previa) previa.sujetos = [...new Set([...previa.sujetos, ...r.sujetos])];
+      else {
+        const copia = { ...r, sujetos: [...r.sujetos] };
+        vistas.set(clave, copia);
+        salida.push(copia);
+      }
+    }
+    return salida;
   }
 
   async listar() {
@@ -143,13 +166,14 @@ export class WebMesasService {
       result: {
         mesas,
         sinMesa,
-        reglas: ctx.reglas.map((r) => ({
+        reglas: this.reglasParaMostrar(ctx.reglas).map((r) => ({
           id_regla: r.id_regla,
           tipo: r.tipo,
           severidad: r.severidad,
           peso: r.peso,
           id_mesa: r.id_mesa,
           grupo: r.grupo,
+          etiqueta: r.etiqueta,
           mesa_nombre: r.id_mesa != null ? nombreMesa.get(r.id_mesa) ?? null : null,
           sujetos: r.sujetos.map((i) => ({
             id_invitado: i,
@@ -265,9 +289,56 @@ export class WebMesasService {
     return { success: true, message: mensaje, result: { creadas: nuevas.length, grupos, reemplazadas: borradas.count, sinGrupo } };
   }
 
+  /** Regla entre grupos ("Tinco + Vargas" juntos, o "Ramos ≠ Tinco"): une o separa a todos los miembros de los grupos elegidos. */
+  async entreGrupos(dto: EntreGruposDto) {
+    const ctx = await this.contexto();
+    if (ctx.mesas.length === 0) throw new BadRequestException("Primero crea al menos una mesa.");
+    const capacidadMaxima = Math.max(...ctx.mesas.map((m) => m.capacidad));
+
+    const nombres: string[] = [];
+    const miembros: Unidad[][] = [];
+    for (const nombre of dto.grupos) {
+      const clave = claveGrupo(nombre);
+      if (!clave || nombres.some((n) => claveGrupo(n) === clave)) continue;
+      const gente = ctx.unidades.filter((u) => claveGrupo(u.grupo) === clave);
+      if (gente.length === 0) throw new BadRequestException(`Nadie confirmado tiene el grupo «${nombre}».`);
+      nombres.push(nombre.replace(/s+/g, " ").trim());
+      miembros.push(gente);
+    }
+    if (nombres.length < 2) throw new BadRequestException("Elige al menos dos grupos distintos.");
+
+    const peso = dto.severidad === "SOFT" ? dto.peso ?? 50 : null;
+    const etiqueta = nombres.join(dto.tipo === "SAME_TABLE" ? " + " : " ≠ ").slice(0, 130);
+    let filas: number[][];
+    if (dto.tipo === "SAME_TABLE") {
+      filas = reglasJuntosEntreGrupos(miembros, capacidadMaxima);
+      const total = miembros.flat().reduce((s, u) => s + u.tamano, 0);
+      if (dto.severidad === "HARD" && total > capacidadMaxima) {
+        throw new BadRequestException(
+          `Entre todos suman ${total} personas y la mesa más grande tiene ${capacidadMaxima} lugares: usa «Preferible» en vez de «Obligatoria».`,
+        );
+      }
+    } else {
+      filas = paresSeparados(miembros.map((g) => g.map((u) => u.id_invitado))).map(([a, b]) => [a, b]);
+      if (filas.length > 400) throw new BadRequestException("Esos grupos son muy grandes para separarlos todos (más de 400 pares). Elige grupos más chicos.");
+    }
+    if (filas.length === 0) throw new BadRequestException("Esos grupos no tienen suficientes personas confirmadas para crear la regla.");
+
+    await this.prisma.webMesaRegla.createMany({
+      data: filas.map((sujetos) => ({ tipo: dto.tipo, severidad: dto.severidad, peso, sujetos, etiqueta })),
+    });
+    const personas = new Set(filas.flat()).size;
+    return { success: true, message: `Regla creada: ${etiqueta} (${personas} personas).`, result: { filas: filas.length, personas } };
+  }
+
   async eliminarRegla(id_regla: number) {
     const existe = await this.prisma.webMesaRegla.findUnique({ where: { id_regla } });
     if (!existe) throw new BadRequestException("La regla no existe.");
+    if (existe.etiqueta) {
+      // Una regla entre grupos son varias filas con la misma etiqueta: se borran juntas.
+      await this.prisma.webMesaRegla.deleteMany({ where: { etiqueta: existe.etiqueta, tipo: existe.tipo, severidad: existe.severidad } });
+      return { success: true, message: "Regla eliminada." };
+    }
     await this.prisma.webMesaRegla.delete({ where: { id_regla } });
     return { success: true, message: "Regla eliminada." };
   }

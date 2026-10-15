@@ -259,6 +259,8 @@ model WebMesaRegla {
   id_mesa   Int?
   /// Si viene de "Juntar por grupo": nombre del grupo. Null = regla creada a mano.
   grupo     String?  @db.VarChar(60)
+  /// Regla entre grupos creada a mano ("Tinco + Vargas"). Las reglas con la misma etiqueta se muestran y borran juntas.
+  etiqueta  String?  @db.VarChar(130)
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("web_mesa_reglas")

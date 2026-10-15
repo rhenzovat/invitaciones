@@ -40,6 +40,13 @@ export class CrearReglaDto {
   @IsOptional() @IsInt() id_mesa?: number;
 }
 
+export class EntreGruposDto {
+  @IsIn(["SAME_TABLE", "SEPARATE"]) tipo!: "SAME_TABLE" | "SEPARATE";
+  @IsIn(["HARD", "SOFT"]) severidad!: "HARD" | "SOFT";
+  @IsOptional() @IsInt() @Min(1) @Max(1000) peso?: number;
+  @IsArray() @ArrayMinSize(2) @ArrayMaxSize(10) @IsString({ each: true }) @MaxLength(60, { each: true }) grupos!: string[];
+}
+
 export class PosicionMesaDto {
   @IsInt() id_mesa!: number;
   @IsInt() @Min(0) @Max(5000) x!: number;

@@ -19,6 +19,7 @@ export interface ReglaInfo {
   sujetos: number[];
   id_mesa: number | null;
   grupo?: string | null;
+  etiqueta?: string | null;
 }
 
 export const uid = (id: number) => `u${id}`;
@@ -171,6 +172,35 @@ export function reglasPorGrupo(unidades: UnidadGrupo[], capacidadMaxima: number)
     for (const t of tandas) if (t.ids.length >= 2) reglas.push({ grupo: nombre, sujetos: t.ids.sort((a, b) => a - b) });
   }
   return reglas;
+}
+
+/** "Juntos" entre grupos: llena mesas en orden, un grupo detras de otro, para que cada grupo quede lo mas entero posible. */
+export function reglasJuntosEntreGrupos(grupos: UnidadGrupo[][], capacidadMaxima: number): number[][] {
+  const tandas: { libre: number; ids: number[] }[] = [];
+  let actual: { libre: number; ids: number[] } | null = null;
+  for (const miembros of grupos) {
+    for (const u of [...miembros].sort((a, b) => b.tamano - a.tamano || a.id_invitado - b.id_invitado)) {
+      if (u.tamano > capacidadMaxima) continue;
+      if (!actual || actual.libre < u.tamano) {
+        actual = { libre: capacidadMaxima, ids: [] };
+        tandas.push(actual);
+      }
+      actual.libre -= u.tamano;
+      actual.ids.push(u.id_invitado);
+    }
+  }
+  return tandas.filter((t) => t.ids.length >= 2).map((t) => t.ids.sort((a, b) => a - b));
+}
+
+/** "Separados" entre grupos: una regla por cada par (uno de A, uno de B) de grupos distintos. */
+export function paresSeparados(grupos: number[][]): [number, number][] {
+  const pares: [number, number][] = [];
+  for (let i = 0; i < grupos.length; i++) {
+    for (let j = i + 1; j < grupos.length; j++) {
+      for (const a of grupos[i]) for (const b of grupos[j]) if (a !== b) pares.push([a, b]);
+    }
+  }
+  return pares;
 }
 
 /** Cambia los ids opacos de un mensaje del optimizador por nombres legibles. */

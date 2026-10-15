@@ -13,11 +13,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import GroupWorkIcon from "@mui/icons-material/GroupWork";
+import LinkIcon from "@mui/icons-material/Link";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import MapIcon from "@mui/icons-material/Map";
 
 import {
-  listar, crearMesas, actualizarMesa, moverMesa, eliminarMesa, crearRegla, juntarPorGrupo, eliminarRegla, asignar, limpiar, optimizar, aceptar,
+  listar, crearMesas, actualizarMesa, moverMesa, eliminarMesa, crearRegla, juntarPorGrupo, reglaEntreGrupos, eliminarRegla, asignar, limpiar, optimizar, aceptar,
 } from "../../../api/web_mesas.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
 
@@ -52,6 +53,7 @@ const ESTADO_PROPUESTA = {
   SIN_PROBLEMA: { label: "Nada que optimizar", bgcolor: "rgba(148,163,184,0.18)", color: "#64748b" },
 };
 
+const ENTRE_INICIAL = { tipo: "SAME_TABLE", severidad: "SOFT", peso: 50, grupos: [] };
 const REGLA_INICIAL = { tipo: "SAME_TABLE", severidad: "SOFT", peso: 50, sujetos: [], id_mesa: "" };
 
 function SelectorMesa({ valor, mesas, onChange }) {
@@ -92,6 +94,7 @@ export default function MesasIndexPage() {
   const [dlgMesas, setDlgMesas] = useState(null);
   const [dlgMesa, setDlgMesa] = useState(null);
   const [dlgRegla, setDlgRegla] = useState(null);
+  const [dlgEntre, setDlgEntre] = useState(null);
   const [opt, setOpt] = useState(null);
   const [minimizar, setMinimizar] = useState(true);
   const [guardando, setGuardando] = useState(false);
@@ -163,6 +166,33 @@ export default function MesasIndexPage() {
     };
     if (await ejecutar(() => crearRegla(datosRegla))) setDlgRegla(null);
   };
+  // Grupos con gente confirmada, para las reglas entre grupos.
+  const gruposDisponibles = (() => {
+    const mapa = new Map();
+    for (const p of datos?.invitadosConfirmados ?? []) {
+      const nombre = (p.grupo || "").trim();
+      if (!nombre) continue;
+      const clave = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").toLowerCase();
+      const g = mapa.get(clave) ?? { nombre, personas: 0 };
+      g.personas += p.tamano ?? 1;
+      mapa.set(clave, g);
+    }
+    return [...mapa.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  })();
+
+  const guardarEntreGrupos = async () => {
+    const d = dlgEntre;
+    const cuerpo = { tipo: d.tipo, severidad: d.severidad, grupos: d.grupos, ...(d.severidad === "SOFT" ? { peso: Number(d.peso) || 50 } : {}) };
+    setGuardando(true);
+    try {
+      const res = await reglaEntreGrupos(cuerpo);
+      handleSuccessMessages("Listo", res.message);
+      setDlgEntre(null);
+      await cargar();
+    } catch (e) { handleErrorMessages("Error", e); }
+    finally { setGuardando(false); }
+  };
+
   const juntarGrupos = async () => {
     const hayAuto = (datos?.reglas ?? []).some((r) => r.grupo);
     if (hayAuto) {
@@ -355,6 +385,13 @@ export default function MesasIndexPage() {
                     </Button>
                   </span>
                 </Tooltip>
+                <Tooltip title="Sienta juntas (o separadas) a varias familias o grupos: por ejemplo Tinco + Vargas">
+                  <span>
+                    <Button size="small" startIcon={<LinkIcon />} onClick={() => setDlgEntre({ ...ENTRE_INICIAL })} disabled={guardando || mesas.length === 0 || gruposDisponibles.length < 2} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>
+                      Regla entre grupos
+                    </Button>
+                  </span>
+                </Tooltip>
                 <Button size="small" startIcon={<AddIcon />} onClick={() => setDlgRegla({ ...REGLA_INICIAL })} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>
                   Agregar regla
                 </Button>
@@ -370,13 +407,16 @@ export default function MesasIndexPage() {
                   <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, flexWrap: "wrap", minWidth: 0 }}>
                     <Chip size="small" label={r.tipo === "FIXED_TABLE" ? `Fijo en ${r.mesa_nombre ?? "?"}` : TIPOS[r.tipo]} sx={{ fontWeight: 700, bgcolor: "rgba(44,26,14,0.08)" }} />
                     {r.grupo && <Chip size="small" label={`Grupo: ${r.grupo}`} sx={{ fontWeight: 700, bgcolor: "rgba(204,107,142,0.14)", color: "#a0455e" }} />}
+                    {r.etiqueta && <Chip size="small" label={r.etiqueta} sx={{ fontWeight: 700, bgcolor: "rgba(37,99,235,0.12)", color: "#1d4ed8" }} />}
                     <Chip
                       size="small" label={r.severidad === "HARD" ? "Obligatoria" : `Preferible (${r.peso})`}
                       sx={{ fontWeight: 700, bgcolor: r.severidad === "HARD" ? "rgba(239,68,68,0.14)" : "rgba(245,158,11,0.16)", color: r.severidad === "HARD" ? "#dc2626" : "#b45309" }}
                     />
-                    <Typography sx={{ fontSize: "0.8rem", color: "#2c1a0e" }}>
-                      {r.sujetos.map((s) => (s.confirmo ? s.nombre : `${s.nombre} (sin confirmar)`)).join(", ")}
-                    </Typography>
+                    <Tooltip title={r.sujetos.length > 4 ? r.sujetos.map((s) => s.nombre).join(", ") : ""}>
+                      <Typography sx={{ fontSize: "0.8rem", color: "#2c1a0e", ...(r.sujetos.length > 4 ? { display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } : {}) }}>
+                        {r.sujetos.length > 4 ? `${r.sujetos.length} invitados: ` : ""}{r.sujetos.map((s) => (s.confirmo ? s.nombre : `${s.nombre} (sin confirmar)`)).join(", ")}
+                      </Typography>
+                    </Tooltip>
                   </Box>
                   <Tooltip title="Eliminar regla">
                     <IconButton size="small" onClick={() => borrarRegla(r)} sx={{ color: "#ef4444" }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
@@ -411,6 +451,50 @@ export default function MesasIndexPage() {
         <DialogActions>
           <Button onClick={() => setDlgMesa(null)}>Cancelar</Button>
           <Button variant="contained" onClick={guardarMesa} disabled={guardando}>Guardar</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Regla entre grupos */}
+      <Dialog open={!!dlgEntre} onClose={() => setDlgEntre(null)} maxWidth="sm" fullWidth>
+        <DialogTitle>Regla entre grupos</DialogTitle>
+        <DialogContent>
+          {dlgEntre && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Qué quieres</InputLabel>
+                <Select label="Qué quieres" value={dlgEntre.tipo} onChange={(e) => setDlgEntre((p) => ({ ...p, tipo: e.target.value }))}>
+                  <MenuItem value="SAME_TABLE">Que se sienten juntos (en la misma mesa)</MenuItem>
+                  <MenuItem value="SEPARATE">Que no se sienten juntos (en mesas distintas)</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Qué tan importante</InputLabel>
+                <Select label="Qué tan importante" value={dlgEntre.severidad} onChange={(e) => setDlgEntre((p) => ({ ...p, severidad: e.target.value }))}>
+                  <MenuItem value="SOFT">Preferible (si se puede)</MenuItem>
+                  <MenuItem value="HARD">Obligatoria</MenuItem>
+                </Select>
+              </FormControl>
+              {dlgEntre.severidad === "SOFT" && (
+                <TextField size="small" label="Importancia (1 a 1000)" type="number" inputProps={{ min: 1, max: 1000 }} value={dlgEntre.peso} onChange={(e) => setDlgEntre((p) => ({ ...p, peso: e.target.value }))} />
+              )}
+              <Autocomplete
+                multiple size="small" options={gruposDisponibles} getOptionLabel={(o) => `${o.nombre} (${o.personas})`}
+                isOptionEqualToValue={(a, b) => a.nombre === b.nombre}
+                value={gruposDisponibles.filter((g) => dlgEntre.grupos.includes(g.nombre))}
+                onChange={(_, v) => setDlgEntre((p) => ({ ...p, grupos: v.map((g) => g.nombre) }))}
+                renderInput={(params) => <TextField {...params} label="Grupos (al menos 2)" helperText="Solo aparecen grupos con gente que ya confirmó. El número es cuántas personas son." />}
+              />
+              <Typography sx={{ fontSize: "0.75rem", color: "#8a7a5c" }}>
+                {dlgEntre.tipo === "SAME_TABLE"
+                  ? "Todos los de esos grupos se intentan sentar en la misma mesa. Si no caben, se reparten en mesas seguidas, un grupo detrás de otro."
+                  : "Nadie de un grupo compartirá mesa con nadie de los otros grupos elegidos."}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDlgEntre(null)}>Cancelar</Button>
+          <Button variant="contained" onClick={guardarEntreGrupos} disabled={guardando || (dlgEntre?.grupos.length ?? 0) < 2}>Crear regla</Button>
         </DialogActions>
       </Dialog>
 

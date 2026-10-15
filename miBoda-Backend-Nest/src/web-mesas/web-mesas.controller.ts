@@ -7,6 +7,7 @@ import {
   AsignarDto,
   CrearMesasDto,
   CrearReglaDto,
+  EntreGruposDto,
   EliminarMesaDto,
   EliminarReglaDto,
   OptimizarDto,
@@ -58,6 +59,12 @@ export class WebMesasController {
   @HttpCode(HttpStatus.OK)
   juntarPorGrupo(@Body() dto: PorGrupoDto) {
     return this.service.juntarPorGrupo(dto);
+  }
+
+  @Post("reglas/entre_grupos")
+  @HttpCode(HttpStatus.OK)
+  entreGrupos(@Body() dto: EntreGruposDto) {
+    return this.service.entreGrupos(dto);
   }
 
   @Delete("reglas/eliminar")
