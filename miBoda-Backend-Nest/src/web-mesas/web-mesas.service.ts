@@ -4,8 +4,10 @@ import { PrismaService } from "../prisma/prisma.service";
 import { OptimizadorClient } from "./optimizador.client";
 import {
   AceptarDto,
+  ActualizarEspacioDto,
   ActualizarMesaDto,
   AsignarDto,
+  CrearEspacioDto,
   CrearMesasDto,
   CrearReglaDto,
   EntreGruposDto,
@@ -188,6 +190,7 @@ export class WebMesasService {
           sinMesa: sinMesa.length,
           capacidadTotal: ctx.mesas.reduce((s, m) => s + m.capacidad, 0),
         },
+        espacios: await this.prisma.webMesaEspacio.findMany({ orderBy: { id_espacio: "asc" } }),
         invitadosConfirmados: ctx.unidades.map(persona),
         optimizadorConfigurado: this.optimizador.configurado(),
       },
@@ -221,6 +224,47 @@ export class WebMesasService {
       data: { nombre: dto.nombre, capacidad: dto.capacidad },
     });
     return { success: true, message: "Mesa actualizada." };
+  }
+
+  /** Medidas y nombre de cada tipo de espacio al crearlo (px del plano). */
+  private static readonly ESPACIOS: Record<string, { nombre: string; ancho: number; alto: number }> = {
+    ESCENARIO: { nombre: "Escenario", ancho: 500, alto: 440 },
+    PISTA: { nombre: "Pista de baile", ancho: 360, alto: 260 },
+    BAR: { nombre: "Bar", ancho: 240, alto: 560 },
+    COCINA: { nombre: "Cocina", ancho: 440, alto: 600 },
+    OTRO: { nombre: "Espacio", ancho: 300, alto: 200 },
+  };
+
+  async crearEspacio(dto: CrearEspacioDto) {
+    if ((await this.prisma.webMesaEspacio.count()) >= 30) throw new BadRequestException("El maximo es de 30 espacios.");
+    const base = WebMesasService.ESPACIOS[dto.tipo];
+    const creado = await this.prisma.webMesaEspacio.create({
+      data: { nombre: dto.nombre || base.nombre, tipo: dto.tipo, pos_x: 100, pos_y: 100, ancho: base.ancho, alto: base.alto },
+    });
+    return { success: true, message: "Espacio agregado.", result: creado };
+  }
+
+  async actualizarEspacio(dto: ActualizarEspacioDto) {
+    const existe = await this.prisma.webMesaEspacio.findUnique({ where: { id_espacio: dto.id_espacio } });
+    if (!existe) throw new BadRequestException("El espacio no existe.");
+    await this.prisma.webMesaEspacio.update({
+      where: { id_espacio: dto.id_espacio },
+      data: {
+        ...(dto.nombre !== undefined ? { nombre: dto.nombre } : {}),
+        ...(dto.x !== undefined ? { pos_x: dto.x } : {}),
+        ...(dto.y !== undefined ? { pos_y: dto.y } : {}),
+        ...(dto.ancho !== undefined ? { ancho: dto.ancho } : {}),
+        ...(dto.alto !== undefined ? { alto: dto.alto } : {}),
+      },
+    });
+    return { success: true, message: "Espacio actualizado." };
+  }
+
+  async eliminarEspacio(id_espacio: number) {
+    const existe = await this.prisma.webMesaEspacio.findUnique({ where: { id_espacio } });
+    if (!existe) throw new BadRequestException("El espacio no existe.");
+    await this.prisma.webMesaEspacio.delete({ where: { id_espacio } });
+    return { success: true, message: "Espacio eliminado." };
   }
 
   async moverMesa(dto: PosicionMesaDto) {

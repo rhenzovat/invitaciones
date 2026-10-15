@@ -6,7 +6,10 @@ import {
   ActualizarMesaDto,
   AsignarDto,
   CrearMesasDto,
+  ActualizarEspacioDto,
+  CrearEspacioDto,
   CrearReglaDto,
+  EliminarEspacioDto,
   EntreGruposDto,
   EliminarMesaDto,
   EliminarReglaDto,
@@ -42,6 +45,23 @@ export class WebMesasController {
   @HttpCode(HttpStatus.OK)
   posicion(@Body() dto: PosicionMesaDto) {
     return this.service.moverMesa(dto);
+  }
+
+  @Post("espacios/crear")
+  @HttpCode(HttpStatus.OK)
+  crearEspacio(@Body() dto: CrearEspacioDto) {
+    return this.service.crearEspacio(dto);
+  }
+
+  @Post("espacios/actualizar")
+  @HttpCode(HttpStatus.OK)
+  actualizarEspacio(@Body() dto: ActualizarEspacioDto) {
+    return this.service.actualizarEspacio(dto);
+  }
+
+  @Delete("espacios/eliminar")
+  eliminarEspacio(@Body() dto: EliminarEspacioDto) {
+    return this.service.eliminarEspacio(dto.id_espacio);
   }
 
   @Delete("eliminar")

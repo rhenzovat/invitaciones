@@ -265,3 +265,17 @@ model WebMesaRegla {
 
   @@map("web_mesa_reglas")
 }
+
+/// Espacios del salon que se dibujan en el plano de mesas (escenario, pista de baile, bar...). Medidas en px del plano.
+model WebMesaEspacio {
+  id_espacio Int      @id @default(autoincrement())
+  nombre     String   @db.VarChar(60)
+  tipo       String   @db.VarChar(12)
+  pos_x      Int
+  pos_y      Int
+  ancho      Int
+  alto       Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("web_mesa_espacios")
+}

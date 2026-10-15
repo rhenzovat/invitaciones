@@ -18,7 +18,7 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import MapIcon from "@mui/icons-material/Map";
 
 import {
-  listar, crearMesas, actualizarMesa, moverMesa, eliminarMesa, crearRegla, juntarPorGrupo, reglaEntreGrupos, eliminarRegla, asignar, limpiar, optimizar, aceptar,
+  listar, crearMesas, actualizarMesa, moverMesa, crearEspacio, actualizarEspacio, eliminarEspacio, eliminarMesa, crearRegla, juntarPorGrupo, reglaEntreGrupos, eliminarRegla, asignar, limpiar, optimizar, aceptar,
 } from "../../../api/web_mesas.api";
 import { handleErrorMessages, handleSuccessMessages, confirmAction } from "../../../components/notify-messages";
 
@@ -120,6 +120,25 @@ export default function MesasIndexPage() {
   const guardarPosicion = async (id_mesa, x, y) => {
     try { await moverMesa(id_mesa, x, y); }
     catch (e) { handleErrorMessages("No se guardó la posición de la mesa", e); }
+  };
+
+  const espacioMovido = async (id_espacio, x, y) => {
+    try { await actualizarEspacio({ id_espacio, x, y }); }
+    catch (e) { handleErrorMessages("No se guardó la posición del espacio", e); }
+  };
+  const espacioGuardar = async (id_espacio, datos) => {
+    try { await actualizarEspacio({ id_espacio, ...datos }); await cargar(); }
+    catch (e) { handleErrorMessages("Error", e); }
+  };
+  const espacioCrear = async (tipo) => {
+    try { await crearEspacio(tipo); await cargar(); }
+    catch (e) { handleErrorMessages("Error", e); }
+  };
+  const espacioEliminar = async (espacio) => {
+    const r = await confirmAction(`¿Eliminar «${espacio.nombre}» del plano?`, "Sí, eliminar", "Cancelar");
+    if (!r.isConfirmed) return;
+    try { await eliminarEspacio(espacio.id_espacio); await cargar(); }
+    catch (e) { handleErrorMessages("Error", e); }
   };
 
   const mover = async (id_invitado, id_mesa) => {
@@ -314,7 +333,8 @@ export default function MesasIndexPage() {
 
           {mesas.length > 0 && vista === "plano" && (
             <PlanoMesas
-              mesas={mesas} sinMesa={datos.sinMesa}
+              mesas={mesas} sinMesa={datos.sinMesa} espacios={datos.espacios ?? []}
+              onEspacioMovido={espacioMovido} onEspacioGuardar={espacioGuardar} onEspacioCrear={espacioCrear} onEspacioEliminar={espacioEliminar}
               renderPersona={(p, mesaActual) => <FilaPersona persona={p} mesaActual={mesaActual} mesas={mesas} onMover={mover} />}
               onMover={mover} onPosicion={guardarPosicion}
               onEditar={(m) => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })}

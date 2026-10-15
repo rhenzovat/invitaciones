@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Box, Typography, IconButton, Tooltip, Chip, Paper, LinearProgress } from "@mui/material";
+import { Box, Typography, IconButton, Tooltip, Chip, Paper, LinearProgress, Button, Menu, MenuItem, TextField } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import EditIcon from "@mui/icons-material/Edit";
@@ -129,14 +130,77 @@ function Mesa({ mesa, pos, seleccionada, colorDe, zoom, onSeleccionar, onMovida,
   );
 }
 
+const ESTILO_ESPACIO = {
+  ESCENARIO: { fondo: "#f1eea0", borde: "#b8b45a", texto: "#6b6730" },
+  PISTA: { fondo: "#e6f0ff", borde: "#8aa9d6", texto: "#3b5f8f" },
+  BAR: { fondo: "#fdeedd", borde: "#d6a76a", texto: "#8a5a22" },
+  COCINA: { fondo: "#ece8e2", borde: "#a99f92", texto: "#6b6258" },
+  OTRO: { fondo: "#f0f0f0", borde: "#b5b5b5", texto: "#666" },
+};
+const TIPOS_ESPACIO = [
+  ["ESCENARIO", "Escenario"], ["PISTA", "Pista de baile"], ["BAR", "Bar"], ["COCINA", "Cocina"], ["OTRO", "Otro espacio"],
+];
+
+/** Zona del salon dibujada en el plano (escenario, pista, bar...): se arrastra igual que una mesa, pero va por detras. */
+function Espacio({ espacio, pos, seleccionado, zoom, onSeleccionar, onMovido }) {
+  const e = ESTILO_ESPACIO[espacio.tipo] ?? ESTILO_ESPACIO.OTRO;
+  const arrastre = useRef(null);
+  const [vivo, setVivo] = useState(null);
+  const actual = vivo ?? pos;
+
+  const iniciar = (ev) => {
+    if (ev.button !== undefined && ev.button !== 0) return;
+    ev.currentTarget.setPointerCapture(ev.pointerId);
+    arrastre.current = { x0: ev.clientX, y0: ev.clientY, px: pos.x, py: pos.y, movio: false };
+  };
+  const mover = (ev) => {
+    const a = arrastre.current;
+    if (!a) return;
+    const dx = (ev.clientX - a.x0) / zoom;
+    const dy = (ev.clientY - a.y0) / zoom;
+    if (!a.movio && Math.hypot(dx, dy) < 4) return;
+    a.movio = true;
+    setVivo({ x: Math.max(0, a.px + dx), y: Math.max(0, a.py + dy) });
+  };
+  const terminar = (ev) => {
+    const a = arrastre.current;
+    arrastre.current = null;
+    if (!a) return;
+    try { ev.currentTarget.releasePointerCapture(ev.pointerId); } catch { /* ya liberado */ }
+    if (!a.movio) { onSeleccionar(espacio.id_espacio); return; }
+    setVivo(null);
+    onMovido(espacio.id_espacio, ajustar(a.px + (ev.clientX - a.x0) / zoom), ajustar(a.py + (ev.clientY - a.y0) / zoom));
+  };
+
+  return (
+    <Box
+      onPointerDown={iniciar} onPointerMove={mover} onPointerUp={terminar} onPointerCancel={terminar}
+      sx={{
+        position: "absolute", left: actual.x, top: actual.y, width: espacio.ancho, height: espacio.alto, zIndex: 0,
+        bgcolor: e.fondo, border: seleccionado ? "3px solid #a0455e" : `2px solid ${e.borde}`, borderRadius: "10px",
+        display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", px: 1,
+        cursor: vivo ? "grabbing" : "grab", touchAction: "none", userSelect: "none", opacity: vivo ? 0.85 : 1,
+      }}
+    >
+      <Typography sx={{ fontWeight: 800, color: e.texto, fontSize: "1.05rem", letterSpacing: 1, textTransform: "uppercase", writingMode: espacio.alto > espacio.ancho * 1.6 ? "vertical-rl" : "horizontal-tb" }}>
+        {espacio.nombre}
+      </Typography>
+    </Box>
+  );
+}
+
 /**
  * Plano del salon: mesas redondas que se arrastran (se guardan en la base), zoom, y panel lateral para sentar gente
  * (arrastrando a una mesa o con el selector). `renderPersona` pinta una fila con el selector de mesa.
  */
-export default function PlanoMesas({ mesas, sinMesa, renderPersona, onMover, onPosicion, onEditar, onBorrar }) {
+export default function PlanoMesas({ mesas, sinMesa, espacios = [], renderPersona, onMover, onPosicion, onEditar, onBorrar, onEspacioMovido, onEspacioGuardar, onEspacioCrear, onEspacioEliminar }) {
   const [zoom, setZoom] = useState(0.8);
   const [seleccion, setSeleccion] = useState(null);
   const [ov, setOv] = useState({});
+  const [ovEsp, setOvEsp] = useState({});
+  const [espSel, setEspSel] = useState(null);
+  const [menuEsp, setMenuEsp] = useState(null);
+  const [medidas, setMedidas] = useState(null);
 
   const posiciones = useMemo(() => {
     const out = {};
@@ -159,9 +223,18 @@ export default function PlanoMesas({ mesas, sinMesa, renderPersona, onMover, onP
   }, [mesas, sinMesa]);
   const colorDe = (grupo) => colores.find((c) => c.k === claveGrupo(grupo))?.color ?? "#8a7a5c";
 
-  const ancho = Math.max(MIN_W, ...Object.values(posiciones).map((p) => p.x + 320));
-  const alto = Math.max(MIN_H, ...Object.values(posiciones).map((p) => p.y + 320));
+  const posEsp = (e) => ovEsp[e.id_espacio] ?? { x: e.pos_x, y: e.pos_y };
+  const ancho = Math.max(MIN_W, ...Object.values(posiciones).map((p) => p.x + 320), ...espacios.map((e) => posEsp(e).x + e.ancho + 40));
+  const alto = Math.max(MIN_H, ...Object.values(posiciones).map((p) => p.y + 320), ...espacios.map((e) => posEsp(e).y + e.alto + 40));
+  const espElegido = espacios.find((e) => e.id_espacio === espSel) ?? null;
   const elegida = mesas.find((m) => m.id_mesa === seleccion) ?? null;
+
+  const espMovido = (id, x, y) => {
+    setOvEsp((p) => ({ ...p, [id]: { x, y } }));
+    onEspacioMovido(id, x, y);
+  };
+  const elegirEspacio = (id) => { setEspSel(id); setSeleccion(null); setMedidas(null); };
+  const elegirMesa = (id) => { setSeleccion(id); setEspSel(null); };
 
   const movida = (id, x, y) => {
     setOv((p) => ({ ...p, [id]: { x, y } }));
@@ -175,6 +248,12 @@ export default function PlanoMesas({ mesas, sinMesa, renderPersona, onMover, onP
           <OpenWithIcon sx={{ fontSize: 18, color: "#a0455e", ml: 0.5 }} />
           <Typography sx={{ fontSize: "0.75rem", color: "#7a4030", fontWeight: 700 }}>Arrastra las mesas para ordenarlas. Toca una para ver quién está sentado.</Typography>
           <Box sx={{ flex: 1 }} />
+          <Button size="small" startIcon={<AddIcon />} onClick={(e) => setMenuEsp(e.currentTarget)} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>Agregar espacio</Button>
+          <Menu anchorEl={menuEsp} open={!!menuEsp} onClose={() => setMenuEsp(null)}>
+            {TIPOS_ESPACIO.map(([tipo, etiqueta]) => (
+              <MenuItem key={tipo} onClick={() => { setMenuEsp(null); onEspacioCrear(tipo); }}>{etiqueta}</MenuItem>
+            ))}
+          </Menu>
           <IconButton size="small" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(1)))}><ZoomOutIcon fontSize="small" /></IconButton>
           <Typography sx={{ fontSize: "0.78rem", fontWeight: 800, minWidth: 38, textAlign: "center" }}>{Math.round(zoom * 100)}%</Typography>
           <IconButton size="small" onClick={() => setZoom((z) => Math.min(1.4, +(z + 0.1).toFixed(1)))}><ZoomInIcon fontSize="small" /></IconButton>
@@ -183,16 +262,19 @@ export default function PlanoMesas({ mesas, sinMesa, renderPersona, onMover, onP
         <Box sx={{ height: { xs: 460, md: "66vh" }, overflow: "auto", bgcolor: "#faf6f2" }}>
           <Box sx={{ width: ancho * zoom, height: alto * zoom, position: "relative" }}>
             <Box
-              onPointerDown={(e) => { if (e.target === e.currentTarget) setSeleccion(null); }}
+              onPointerDown={(e) => { if (e.target === e.currentTarget) { setSeleccion(null); setEspSel(null); } }}
               sx={{
                 position: "absolute", left: 0, top: 0, width: ancho, height: alto, transform: `scale(${zoom})`, transformOrigin: "top left",
                 backgroundImage: "radial-gradient(circle, #d9cabd 1px, transparent 1.4px)", backgroundSize: `${SNAP}px ${SNAP}px`,
               }}
             >
+              {espacios.map((e) => (
+                <Espacio key={e.id_espacio} espacio={e} pos={posEsp(e)} seleccionado={espSel === e.id_espacio} zoom={zoom} onSeleccionar={elegirEspacio} onMovido={espMovido} />
+              ))}
               {mesas.map((m) => (
                 <Mesa
                   key={m.id_mesa} mesa={m} pos={posiciones[m.id_mesa]} seleccionada={seleccion === m.id_mesa} colorDe={colorDe} zoom={zoom}
-                  onSeleccionar={setSeleccion} onMovida={movida} onSoltarPersona={(id, idMesa) => onMover(id, idMesa)}
+                  onSeleccionar={elegirMesa} onMovida={movida} onSoltarPersona={(id, idMesa) => onMover(id, idMesa)}
                 />
               ))}
             </Box>
@@ -209,6 +291,33 @@ export default function PlanoMesas({ mesas, sinMesa, renderPersona, onMover, onP
       </Paper>
 
       <Box sx={{ width: { xs: "100%", lg: 340 }, flexShrink: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+        {espElegido && (
+          <Paper elevation={0} sx={{ borderRadius: "14px", border: "1px solid rgba(204,107,142,0.18)", p: 1.5, display: "flex", flexDirection: "column", gap: 1.2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <Typography sx={{ fontWeight: 800, color: "#2c1a0e" }}>Espacio del salón</Typography>
+              <IconButton size="small" onClick={() => setEspSel(null)}><CloseIcon sx={{ fontSize: 16 }} /></IconButton>
+            </Box>
+            {(() => {
+              const m = medidas ?? { nombre: espElegido.nombre, ancho: espElegido.ancho, alto: espElegido.alto };
+              const cambiado = m.nombre !== espElegido.nombre || m.ancho !== espElegido.ancho || m.alto !== espElegido.alto;
+              return (
+                <>
+                  <TextField size="small" label="Nombre" value={m.nombre} inputProps={{ maxLength: 60 }} onChange={(e) => setMedidas({ ...m, nombre: e.target.value })} />
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <TextField size="small" type="number" label="Ancho" value={m.ancho} inputProps={{ min: 40, max: 2000, step: 20 }} onChange={(e) => setMedidas({ ...m, ancho: Number(e.target.value) })} />
+                    <TextField size="small" type="number" label="Alto" value={m.alto} inputProps={{ min: 40, max: 2000, step: 20 }} onChange={(e) => setMedidas({ ...m, alto: Number(e.target.value) })} />
+                  </Box>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button size="small" variant="contained" disabled={!cambiado || !m.nombre.trim() || !(m.ancho >= 40) || !(m.alto >= 40)} onClick={() => { onEspacioGuardar(espElegido.id_espacio, { nombre: m.nombre.trim(), ancho: Math.round(m.ancho), alto: Math.round(m.alto) }); setMedidas(null); }} sx={{ textTransform: "none", fontWeight: 700 }}>Guardar</Button>
+                    <Button size="small" color="error" startIcon={<DeleteIcon sx={{ fontSize: 15 }} />} onClick={() => { onEspacioEliminar(espElegido); setEspSel(null); }} sx={{ textTransform: "none", fontWeight: 700 }}>Eliminar</Button>
+                  </Box>
+                  <Typography sx={{ fontSize: "0.68rem", color: "#b8a090" }}>Arrástralo en el plano para moverlo.</Typography>
+                </>
+              );
+            })()}
+          </Paper>
+        )}
+
         {elegida && (
           <Paper elevation={0} sx={{ borderRadius: "14px", border: "1px solid rgba(204,107,142,0.18)", p: 1.5 }}>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

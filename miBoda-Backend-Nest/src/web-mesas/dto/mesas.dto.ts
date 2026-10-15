@@ -47,6 +47,26 @@ export class EntreGruposDto {
   @IsArray() @ArrayMinSize(2) @ArrayMaxSize(10) @IsString({ each: true }) @MaxLength(60, { each: true }) grupos!: string[];
 }
 
+export const TIPOS_ESPACIO = ["ESCENARIO", "PISTA", "BAR", "COCINA", "OTRO"] as const;
+
+export class CrearEspacioDto {
+  @IsIn(TIPOS_ESPACIO as unknown as string[]) tipo!: (typeof TIPOS_ESPACIO)[number];
+  @IsOptional() @Transform(recortar) @IsString() @MaxLength(60) nombre?: string;
+}
+
+export class ActualizarEspacioDto {
+  @IsInt() id_espacio!: number;
+  @IsOptional() @Transform(recortar) @IsString() @IsNotEmpty() @MaxLength(60) nombre?: string;
+  @IsOptional() @IsInt() @Min(0) @Max(5000) x?: number;
+  @IsOptional() @IsInt() @Min(0) @Max(5000) y?: number;
+  @IsOptional() @IsInt() @Min(40) @Max(2000) ancho?: number;
+  @IsOptional() @IsInt() @Min(40) @Max(2000) alto?: number;
+}
+
+export class EliminarEspacioDto {
+  @IsInt() id_espacio!: number;
+}
+
 export class PosicionMesaDto {
   @IsInt() id_mesa!: number;
   @IsInt() @Min(0) @Max(5000) x!: number;

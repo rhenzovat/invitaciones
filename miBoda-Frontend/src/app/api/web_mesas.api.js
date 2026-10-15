@@ -20,6 +20,18 @@ export function moverMesa(id_mesa, x, y) {
   return from(apiClient.post(`${URL}/posicion`, { id_mesa, x, y })).pipe(map((r) => r.data)).toPromise();
 }
 
+export function crearEspacio(tipo) {
+  return from(apiClient.post(`${URL}/espacios/crear`, { tipo })).pipe(map((r) => r.data)).toPromise();
+}
+
+export function actualizarEspacio(datos) {
+  return from(apiClient.post(`${URL}/espacios/actualizar`, datos)).pipe(map((r) => r.data)).toPromise();
+}
+
+export function eliminarEspacio(id_espacio) {
+  return from(apiClient.delete(`${URL}/espacios/eliminar`, { data: { id_espacio } })).pipe(map((r) => r.data)).toPromise();
+}
+
 export function eliminarMesa(id_mesa) {
   return from(apiClient.delete(`${URL}/eliminar`, { data: { id_mesa } })).pipe(map((r) => r.data)).toPromise();
 }
