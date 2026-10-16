@@ -164,7 +164,7 @@ export default function MesasIndexPage() {
     if (await ejecutar(() => crearMesas({ cantidad: Number(dlgMesas.cantidad), capacidad: Number(dlgMesas.capacidad) }))) setDlgMesas(null);
   };
   const guardarMesa = async () => {
-    if (await ejecutar(() => actualizarMesa({ id_mesa: dlgMesa.id_mesa, nombre: dlgMesa.nombre, capacidad: Number(dlgMesa.capacidad) }))) setDlgMesa(null);
+    if (await ejecutar(() => actualizarMesa({ id_mesa: dlgMesa.id_mesa, nombre: dlgMesa.nombre, capacidad: Number(dlgMesa.capacidad), forma: dlgMesa.forma }))) setDlgMesa(null);
   };
   const borrarMesa = async (m) => {
     const r = await confirmAction(`¿Eliminar ${m.nombre}? Quienes estén sentados ahí quedarán sin mesa.`, "Sí, eliminar", "Cancelar");
@@ -337,7 +337,7 @@ export default function MesasIndexPage() {
               onEspacioMovido={espacioMovido} onEspacioGuardar={espacioGuardar} onEspacioCrear={espacioCrear} onEspacioEliminar={espacioEliminar}
               renderPersona={(p, mesaActual) => <FilaPersona persona={p} mesaActual={mesaActual} mesas={mesas} onMover={mover} />}
               onMover={mover} onPosicion={guardarPosicion}
-              onEditar={(m) => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })}
+              onEditar={(m) => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad, forma: m.forma })}
               onBorrar={borrarMesa}
             />
           )}
@@ -369,7 +369,7 @@ export default function MesasIndexPage() {
                       <Typography sx={{ fontWeight: 800, color: "#2c1a0e" }}>{m.nombre}</Typography>
                       <Box>
                         <Tooltip title="Editar">
-                          <IconButton size="small" onClick={() => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad })} sx={{ color: "#a0455e" }}><EditIcon sx={{ fontSize: 15 }} /></IconButton>
+                          <IconButton size="small" onClick={() => setDlgMesa({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad, forma: m.forma })} sx={{ color: "#a0455e" }}><EditIcon sx={{ fontSize: 15 }} /></IconButton>
                         </Tooltip>
                         <Tooltip title="Eliminar">
                           <IconButton size="small" onClick={() => borrarMesa(m)} sx={{ color: "#ef4444" }}><DeleteIcon sx={{ fontSize: 15 }} /></IconButton>
@@ -467,6 +467,13 @@ export default function MesasIndexPage() {
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: "8px !important" }}>
           <TextField label="Nombre" value={dlgMesa?.nombre ?? ""} onChange={(e) => setDlgMesa((p) => ({ ...p, nombre: e.target.value }))} />
           <TextField label="Lugares" type="number" inputProps={{ min: 1, max: 50 }} value={dlgMesa?.capacidad ?? ""} onChange={(e) => setDlgMesa((p) => ({ ...p, capacidad: e.target.value }))} />
+          <FormControl size="small" fullWidth>
+            <InputLabel>Forma en el plano</InputLabel>
+            <Select label="Forma en el plano" value={dlgMesa?.forma ?? "REDONDA"} onChange={(e) => setDlgMesa((p) => ({ ...p, forma: e.target.value }))}>
+              <MenuItem value="REDONDA">Redonda</MenuItem>
+              <MenuItem value="RECTANGULAR">Rectangular</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDlgMesa(null)}>Cancelar</Button>

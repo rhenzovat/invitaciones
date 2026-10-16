@@ -36,7 +36,7 @@ type Unidad = UnidadMesa & { acompanante: string | null; grupo: string | null };
 
 interface Contexto {
   unidades: Unidad[];
-  mesas: (MesaInfo & { pos_x: number | null; pos_y: number | null })[];
+  mesas: (MesaInfo & { pos_x: number | null; pos_y: number | null; forma: string })[];
   reglas: ReglaInfo[];
   asignacion: Map<number, number>;
   nombres: Map<number, string>;
@@ -74,7 +74,7 @@ export class WebMesasService {
 
     return {
       unidades,
-      mesas: mesas.map((m) => ({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad, pos_x: m.pos_x, pos_y: m.pos_y })),
+      mesas: mesas.map((m) => ({ id_mesa: m.id_mesa, nombre: m.nombre, capacidad: m.capacidad, pos_x: m.pos_x, pos_y: m.pos_y, forma: m.forma })),
       reglas: reglas.map((r) => ({
         id_regla: r.id_regla,
         tipo: r.tipo as TipoRegla,
@@ -154,6 +154,7 @@ export class WebMesasService {
         capacidad: m.capacidad,
         pos_x: m.pos_x,
         pos_y: m.pos_y,
+        forma: m.forma,
         ocupados: gente.reduce((s, u) => s + u.tamano, 0),
         personas: gente.map(persona),
       };
@@ -221,7 +222,7 @@ export class WebMesasService {
     }
     await this.prisma.webMesa.update({
       where: { id_mesa: dto.id_mesa },
-      data: { nombre: dto.nombre, capacidad: dto.capacidad },
+      data: { nombre: dto.nombre, capacidad: dto.capacidad, ...(dto.forma ? { forma: dto.forma } : {}) },
     });
     return { success: true, message: "Mesa actualizada." };
   }

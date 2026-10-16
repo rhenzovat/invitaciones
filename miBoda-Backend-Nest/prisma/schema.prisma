@@ -230,6 +230,8 @@ model WebMesa {
   /// Posicion de la mesa en el plano (px). Null = el plano la acomoda solo.
   pos_x     Int?
   pos_y     Int?
+  /// REDONDA o RECTANGULAR (solo cambia como se dibuja en el plano).
+  forma     String   @default("REDONDA") @db.VarChar(12)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 

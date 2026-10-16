@@ -22,12 +22,40 @@ const iniciales = (nombre) =>
 const ajustar = (v) => Math.max(0, Math.round(v / SNAP) * SNAP);
 
 // Geometria de una mesa redonda: el radio crece con la capacidad; los asientos van en un anillo alrededor.
-const geometria = (capacidad) => {
+// Las rectangulares llevan la mitad de los asientos en cada lado largo, como las del salon.
+const geometria = (capacidad, forma) => {
+  const asiento = 11;
+  if (forma === "RECTANGULAR") {
+    const mitad = Math.ceil(capacidad / 2);
+    const paso = 40;
+    const cuerpoW = 84;
+    const cuerpoH = Math.max(110, (mitad - 1) * paso + 2 * asiento + 14);
+    const lado = cuerpoW / 2 + asiento + 3;
+    const w = (lado + asiento + 4) * 2, h = cuerpoH + 2 * (asiento + 4);
+    return {
+      rect: true, asiento, cuerpoW, cuerpoH, w, h, cx: w / 2, cy: h / 2, ancho: cuerpoW,
+      posAsiento: (i) => {
+        const izq = i < mitad;
+        const k = izq ? i : i - mitad;
+        const enLado = izq ? mitad : capacidad - mitad;
+        return { x: w / 2 + (izq ? -lado : lado), y: h / 2 - ((enLado - 1) * paso) / 2 + k * paso };
+      },
+    };
+  }
   const radio = Math.round(34 + capacidad * 2.2);
   const anillo = radio + 16;
-  const asiento = 11;
-  return { radio, anillo, asiento, caja: (anillo + asiento + 4) * 2, centro: anillo + asiento + 4 };
+  const caja = (anillo + asiento + 4) * 2;
+  return {
+    rect: false, radio, anillo, asiento, w: caja, h: caja, cx: caja / 2, cy: caja / 2, ancho: radio * 1.7,
+    posAsiento: (i) => {
+      const ang = -Math.PI / 2 + (i * 2 * Math.PI) / capacidad;
+      return { x: caja / 2 + Math.cos(ang) * anillo, y: caja / 2 + Math.sin(ang) * anillo };
+    },
+  };
 };
+
+// Plano de la sala (PDF del local) dibujado por detras. Mismas coordenadas que las mesas: (punto del PDF - 221, - 305) x 2 + (140, 120).
+const FONDO_PLANO = { url: `${import.meta.env.BASE_URL}assets/plano-salon.png`, x: 98, y: 20, w: 1840, h: 3650 };
 
 /** Un asiento por persona: el invitado y, si lo registro, su acompanante. */
 function asientosDe(mesa) {
@@ -40,7 +68,7 @@ function asientosDe(mesa) {
 }
 
 function Mesa({ mesa, pos, seleccionada, colorDe, zoom, onSeleccionar, onMovida, onSoltarPersona }) {
-  const g = geometria(mesa.capacidad);
+  const g = geometria(mesa.capacidad, mesa.forma);
   const asientos = asientosDe(mesa);
   const arrastre = useRef(null);
   const [vivo, setVivo] = useState(null);
@@ -85,20 +113,20 @@ function Mesa({ mesa, pos, seleccionada, colorDe, zoom, onSeleccionar, onMovida,
         if (id) onSoltarPersona(id, mesa.id_mesa);
       }}
       sx={{
-        position: "absolute", left: actual.x - g.centro, top: actual.y - g.centro, width: g.caja, height: g.caja,
+        position: "absolute", left: actual.x - g.cx, top: actual.y - g.cy, width: g.w, height: g.h,
         cursor: vivo ? "grabbing" : "grab", touchAction: "none", userSelect: "none",
         zIndex: vivo ? 10 : seleccionada ? 5 : 1,
       }}
     >
       {Array.from({ length: mesa.capacidad }).map((_, i) => {
-        const ang = -Math.PI / 2 + (i * 2 * Math.PI) / mesa.capacidad;
+        const sp = g.posAsiento(i);
         const ocupado = asientos[i];
         return (
           <Tooltip key={i} title={ocupado ? `${ocupado.nombre}${ocupado.acompanante ? " (acompañante)" : ""}${ocupado.grupo ? ` · ${ocupado.grupo}` : ""}` : "Asiento libre"} arrow>
             <Box
               sx={{
                 position: "absolute", width: g.asiento * 2, height: g.asiento * 2, borderRadius: "50%",
-                left: g.centro + Math.cos(ang) * g.anillo - g.asiento, top: g.centro + Math.sin(ang) * g.anillo - g.asiento,
+                left: sp.x - g.asiento, top: sp.y - g.asiento,
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.5rem", fontWeight: 800,
                 color: "#fff", bgcolor: ocupado ? colorDe(ocupado.grupo) : "#fff",
                 border: ocupado ? "2px solid #fff" : "1.5px dashed #c9b8aa",
@@ -112,14 +140,15 @@ function Mesa({ mesa, pos, seleccionada, colorDe, zoom, onSeleccionar, onMovida,
       })}
       <Box
         sx={{
-          position: "absolute", left: g.centro - g.radio, top: g.centro - g.radio, width: g.radio * 2, height: g.radio * 2,
-          borderRadius: "50%", bgcolor: encima ? "#fdecef" : "#fff", textAlign: "center",
+          position: "absolute", left: g.cx - (g.rect ? g.cuerpoW / 2 : g.radio), top: g.cy - (g.rect ? g.cuerpoH / 2 : g.radio),
+          width: g.rect ? g.cuerpoW : g.radio * 2, height: g.rect ? g.cuerpoH : g.radio * 2,
+          borderRadius: g.rect ? "8px" : "50%", bgcolor: encima ? "#fdecef" : "#fff", textAlign: "center",
           border: seleccionada ? "3px solid #a0455e" : encima ? "3px dashed #a0455e" : `2px solid ${lleno ? "#f59e0b" : "#d8c9bd"}`,
           boxShadow: vivo ? "0 10px 26px rgba(44,26,14,0.28)" : "0 2px 8px rgba(44,26,14,0.12)",
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", px: 0.5,
         }}
       >
-        <Typography sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#2c1a0e", lineHeight: 1.1, maxWidth: g.radio * 1.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 800, color: "#2c1a0e", lineHeight: 1.1, maxWidth: g.ancho, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {mesa.nombre}
         </Typography>
         <Typography sx={{ fontSize: "0.62rem", fontWeight: 700, color: lleno ? "#b45309" : "#8a7a5c" }}>
@@ -194,7 +223,8 @@ function Espacio({ espacio, pos, seleccionado, zoom, onSeleccionar, onMovido }) 
  * (arrastrando a una mesa o con el selector). `renderPersona` pinta una fila con el selector de mesa.
  */
 export default function PlanoMesas({ mesas, sinMesa, espacios = [], renderPersona, onMover, onPosicion, onEditar, onBorrar, onEspacioMovido, onEspacioGuardar, onEspacioCrear, onEspacioEliminar }) {
-  const [zoom, setZoom] = useState(0.8);
+  const [zoom, setZoom] = useState(0.5);
+  const [verFondo, setVerFondo] = useState(true);
   const [seleccion, setSeleccion] = useState(null);
   const [ov, setOv] = useState({});
   const [ovEsp, setOvEsp] = useState({});
@@ -224,8 +254,8 @@ export default function PlanoMesas({ mesas, sinMesa, espacios = [], renderPerson
   const colorDe = (grupo) => colores.find((c) => c.k === claveGrupo(grupo))?.color ?? "#8a7a5c";
 
   const posEsp = (e) => ovEsp[e.id_espacio] ?? { x: e.pos_x, y: e.pos_y };
-  const ancho = Math.max(MIN_W, ...Object.values(posiciones).map((p) => p.x + 320), ...espacios.map((e) => posEsp(e).x + e.ancho + 40));
-  const alto = Math.max(MIN_H, ...Object.values(posiciones).map((p) => p.y + 320), ...espacios.map((e) => posEsp(e).y + e.alto + 40));
+  const ancho = Math.max(MIN_W, ...(verFondo ? [FONDO_PLANO.x + FONDO_PLANO.w] : []), ...Object.values(posiciones).map((p) => p.x + 320), ...espacios.map((e) => posEsp(e).x + e.ancho + 40));
+  const alto = Math.max(MIN_H, ...(verFondo ? [FONDO_PLANO.y + FONDO_PLANO.h] : []), ...Object.values(posiciones).map((p) => p.y + 320), ...espacios.map((e) => posEsp(e).y + e.alto + 40));
   const espElegido = espacios.find((e) => e.id_espacio === espSel) ?? null;
   const elegida = mesas.find((m) => m.id_mesa === seleccion) ?? null;
 
@@ -248,6 +278,7 @@ export default function PlanoMesas({ mesas, sinMesa, espacios = [], renderPerson
           <OpenWithIcon sx={{ fontSize: 18, color: "#a0455e", ml: 0.5 }} />
           <Typography sx={{ fontSize: "0.75rem", color: "#7a4030", fontWeight: 700 }}>Arrastra las mesas para ordenarlas. Toca una para ver quién está sentado.</Typography>
           <Box sx={{ flex: 1 }} />
+          <Button size="small" onClick={() => setVerFondo((v) => !v)} sx={{ textTransform: "none", fontWeight: 700, color: "#7a4030" }}>{verFondo ? "Ocultar plano del local" : "Mostrar plano del local"}</Button>
           <Button size="small" startIcon={<AddIcon />} onClick={(e) => setMenuEsp(e.currentTarget)} sx={{ textTransform: "none", fontWeight: 700, color: "#a0455e" }}>Agregar espacio</Button>
           <Menu anchorEl={menuEsp} open={!!menuEsp} onClose={() => setMenuEsp(null)}>
             {TIPOS_ESPACIO.map(([tipo, etiqueta]) => (
@@ -268,6 +299,10 @@ export default function PlanoMesas({ mesas, sinMesa, espacios = [], renderPerson
                 backgroundImage: "radial-gradient(circle, #d9cabd 1px, transparent 1.4px)", backgroundSize: `${SNAP}px ${SNAP}px`,
               }}
             >
+              {verFondo && (
+                <Box component="img" src={FONDO_PLANO.url} alt="Plano del salón" draggable={false}
+                  sx={{ position: "absolute", left: FONDO_PLANO.x, top: FONDO_PLANO.y, width: FONDO_PLANO.w, height: FONDO_PLANO.h, pointerEvents: "none", userSelect: "none", zIndex: 0 }} />
+              )}
               {espacios.map((e) => (
                 <Espacio key={e.id_espacio} espacio={e} pos={posEsp(e)} seleccionado={espSel === e.id_espacio} zoom={zoom} onSeleccionar={elegirEspacio} onMovido={espMovido} />
               ))}

@@ -26,6 +26,7 @@ export class ActualizarMesaDto {
   @IsInt() id_mesa!: number;
   @Transform(recortar) @IsString() @IsNotEmpty() @MaxLength(100) nombre!: string;
   @IsInt() @Min(1) @Max(50) capacidad!: number;
+  @IsOptional() @IsIn(["REDONDA", "RECTANGULAR"]) forma?: "REDONDA" | "RECTANGULAR";
 }
 
 export class EliminarMesaDto {
