@@ -24,7 +24,7 @@ const ajustar = (v) => Math.max(0, Math.round(v / SNAP) * SNAP);
 // Geometria de una mesa redonda: el radio crece con la capacidad; los asientos van en un anillo alrededor.
 // Las rectangulares llevan la mitad de los asientos en cada lado largo, como las del salon.
 const geometria = (capacidad, forma) => {
-  const asiento = 11;
+  const asiento = 15;
   if (forma === "RECTANGULAR") {
     const mitad = Math.ceil(capacidad / 2);
     const paso = 40;
@@ -38,24 +38,34 @@ const geometria = (capacidad, forma) => {
         const izq = i < mitad;
         const k = izq ? i : i - mitad;
         const enLado = izq ? mitad : capacidad - mitad;
-        return { x: w / 2 + (izq ? -lado : lado), y: h / 2 - ((enLado - 1) * paso) / 2 + k * paso };
+        return { x: w / 2 + (izq ? -lado : lado), y: h / 2 - ((enLado - 1) * paso) / 2 + k * paso, rot: izq ? 270 : 90 };
       },
     };
   }
   const radio = Math.round(34 + capacidad * 2.2);
-  const anillo = radio + 16;
+  const anillo = radio + 20;
   const caja = (anillo + asiento + 4) * 2;
   return {
     rect: false, radio, anillo, asiento, w: caja, h: caja, cx: caja / 2, cy: caja / 2, ancho: radio * 1.7,
     posAsiento: (i) => {
       const ang = -Math.PI / 2 + (i * 2 * Math.PI) / capacidad;
-      return { x: caja / 2 + Math.cos(ang) * anillo, y: caja / 2 + Math.sin(ang) * anillo };
+      return { x: caja / 2 + Math.cos(ang) * anillo, y: caja / 2 + Math.sin(ang) * anillo, rot: (ang * 180) / Math.PI + 90 };
     },
   };
 };
 
 // Plano de la sala (PDF del local) dibujado por detras. Mismas coordenadas que las mesas: (punto del PDF - 221, - 305) x 2 + (140, 120).
 const FONDO_PLANO = { url: `${import.meta.env.BASE_URL}assets/plano-salon.png`, x: 98, y: 20, w: 1840, h: 3650 };
+
+/** Silla vista desde arriba: asiento y respaldo. Con rot=0 el respaldo queda arriba; se gira para que mire a la mesa. */
+function Silla({ rot, relleno, borde, punteada }) {
+  return (
+    <svg viewBox="0 0 24 24" width="100%" height="100%" style={{ transform: `rotate(${rot}deg)`, display: "block", overflow: "visible" }}>
+      <rect x="2.5" y="1.5" width="19" height="5" rx="2.5" fill={relleno} stroke={borde} strokeWidth="1.4" strokeDasharray={punteada ? "2.5 2" : undefined} />
+      <rect x="3.5" y="8" width="17" height="14" rx="4.5" fill={relleno} stroke={borde} strokeWidth="1.4" strokeDasharray={punteada ? "2.5 2" : undefined} />
+    </svg>
+  );
+}
 
 /** Un asiento por persona: el invitado y, si lo registro, su acompanante. */
 function asientosDe(mesa) {
@@ -125,15 +135,16 @@ function Mesa({ mesa, pos, seleccionada, colorDe, zoom, onSeleccionar, onMovida,
           <Tooltip key={i} title={ocupado ? `${ocupado.nombre}${ocupado.acompanante ? " (acompañante)" : ""}${ocupado.grupo ? ` · ${ocupado.grupo}` : ""}` : "Asiento libre"} arrow>
             <Box
               sx={{
-                position: "absolute", width: g.asiento * 2, height: g.asiento * 2, borderRadius: "50%",
-                left: sp.x - g.asiento, top: sp.y - g.asiento,
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.5rem", fontWeight: 800,
-                color: "#fff", bgcolor: ocupado ? colorDe(ocupado.grupo) : "#fff",
-                border: ocupado ? "2px solid #fff" : "1.5px dashed #c9b8aa",
-                boxShadow: ocupado ? "0 1px 4px rgba(44,26,14,0.3)" : "none",
+                position: "absolute", width: g.asiento * 2 + 4, height: g.asiento * 2 + 4,
+                left: sp.x - g.asiento - 2, top: sp.y - g.asiento - 2,
+                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.62rem", fontWeight: 800,
+                color: ocupado ? "#fff" : "#a89a8c", filter: ocupado ? "drop-shadow(0 1px 2px rgba(44,26,14,0.35))" : "none",
               }}
             >
-              {ocupado ? iniciales(ocupado.nombre) : i + 1}
+              <Box sx={{ position: "absolute", inset: 0 }}>
+                <Silla rot={sp.rot} relleno={ocupado ? colorDe(ocupado.grupo) : "#fff"} borde={ocupado ? "#fff" : "#a89a8c"} />
+              </Box>
+              <Box sx={{ position: "relative", mt: "1px" }}>{ocupado ? iniciales(ocupado.nombre) : i + 1}</Box>
             </Box>
           </Tooltip>
         );
