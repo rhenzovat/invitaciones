@@ -9,6 +9,10 @@ async function bootstrap() {
 
   app.enableCors({ origin: true, credentials: true });
 
+  // El panel llama a validar_conexion con el cuerpo JSON literal "null" (axios post(url, null)). El parser
+  // estricto lo rechazaba con 400 y el panel cerraba la sesion al recargar la pagina.
+  app.useBodyParser("json", { strict: false });
+
   // El panel React (y el sitio publico) siempre llaman a las rutas de la API
   // bajo "/api/..." (asi era en Laravel, con el prefijo automatico de
   // routes/api.php). El sitio estatico (servido por ServeStaticModule) no
