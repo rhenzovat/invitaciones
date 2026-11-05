@@ -189,16 +189,58 @@ const ENDPOINTS = {
  * inyectaba Blade en el servidor.
  */
 async function cargarConfigDesdeBackend() {
-  try {
-    const res = await fetch("/api/miboda/config");
-    if (!res.ok) return;
-    const data = await res.json();
-    if (data && Object.keys(data).length > 0) {
-      Object.assign(CONFIG, data);
+  // El backend (plan gratis de Render) se duerme sin visitas y la primera
+  // respuesta puede tardar ~1 minuto: cada intento se corta a los 25 s y se
+  // reintenta una vez antes de quedarse con el CONFIG de respaldo.
+  for (let intento = 0; intento < 2; intento++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 25000);
+    try {
+      const res = await fetch("/api/miboda/config", { signal: controller.signal });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data && Object.keys(data).length > 0) {
+        Object.assign(CONFIG, data);
+      }
+      return;
+    } catch {
+      // sin respuesta a tiempo: se reintenta, o se mantiene el CONFIG de respaldo
+    } finally {
+      clearTimeout(timer);
     }
-  } catch {
-    // sin backend disponible: se mantiene el CONFIG de respaldo de arriba
   }
+}
+
+/**
+ * Mientras llega la configuracion del backend el sobre ya responde: al
+ * tocarlo late el sello y dice "Abriendo tu invitación…". Devuelve una
+ * funcion que quita este modo y dice si el invitado ya lo habia tocado.
+ */
+function esperarSobreMientrasCarga() {
+  const envelope = document.getElementById("envelope");
+  const hint = document.querySelector(".portada-hint");
+  const audio = document.getElementById("bg-music");
+  const textoHint = hint ? hint.textContent : "";
+  let tocado = false;
+
+  const alTocar = () => {
+    if (tocado) return;
+    tocado = true;
+    envelope.classList.add("cargando");
+    if (hint) hint.textContent = "Abriendo tu invitación…";
+    // iOS solo deja reproducir audio si el primer play() ocurre dentro de un
+    // toque: se desbloquea aqui para que la musica suene al abrirse el sobre.
+    audio.src = CONFIG.musica.src;
+    audio.play().then(() => audio.pause()).catch(() => {});
+  };
+  envelope.addEventListener("click", alTocar);
+
+  return () => {
+    envelope.removeEventListener("click", alTocar);
+    envelope.classList.remove("cargando");
+    if (hint) hint.textContent = textoHint;
+    return tocado;
+  };
 }
 
 async function enviarAMiBodaBackend(url, datos) {
@@ -1368,12 +1410,15 @@ function iniciarSorpresaFinal() {
    INICIALIZACIÓN
    ========================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
+  const terminarEspera = esperarSobreMientrasCarga();
   await cargarConfigDesdeBackend();
+  const sobreYaTocado = terminarEspera();
 
   renderTodo();
   precargarHeroImagen();
   iniciarContador();
   iniciarSobre();
+  if (sobreYaTocado) document.getElementById("envelope").click();
   iniciarBotonMusica();
   iniciarRSVP();
   iniciarCancion();

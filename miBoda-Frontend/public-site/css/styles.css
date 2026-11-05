@@ -309,6 +309,15 @@ h1, h2, h3 { margin: 0; font-weight: 400; }
 .envelope.open .envelope-flap {
   transform: rotateX(180deg);
 }
+/* Tocado mientras todavia cargan los datos del backend: el sello late. */
+.envelope.cargando .envelope-seal {
+  animation: sello-latido 1.2s ease-in-out infinite;
+}
+@keyframes sello-latido {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.12); }
+}
+
 .envelope.open .envelope-seal,
 .envelope.open .envelope-flower {
   opacity: 0;
